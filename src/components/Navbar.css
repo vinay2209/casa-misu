@@ -1,0 +1,79 @@
+/* Navbar styles */
+
+.navbar {
+  background: var(--cream);
+  border-radius: 0 0 40px 40px;
+  padding: 0;
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90vw;
+  max-width: calc(var(--max-width) - 40px);
+  position: relative;
+  padding: 0.6rem 0;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  color: var(--navy);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+}
+
+.navbar-links li:hover,
+.navbar-links li:first-child {
+  background: var(--navy);
+  color: #fff;
+}
+
+/* Centered logo with oval border overlapping the hero */
+.navbar-logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -28px;
+  background: var(--cream);
+  border-radius: 50px;
+  padding: 0.6rem 1.6rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--navy);
+  font-weight: 700;
+  text-align: center;
+  border: 4px solid var(--navy);
+  box-shadow: 0 4px 20px rgba(17,58,125,0.08);
+  z-index: 30;
+}
+
+.navbar-cart {
+  color: var(--navy);
+  font-size: 1.4rem;
+  margin-left: 1rem;
+}
+
+/* Ensure left links align left and right links align right within container */
+.navbar-left, .navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

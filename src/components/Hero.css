@@ -1,0 +1,180 @@
+/* Hero styles */
+
+.hero {
+  background: var(--cream);
+  border-radius: 60px 60px 40px 40px;
+  margin-top: -2rem;
+  padding: 2.5rem 1rem 3rem 1rem;
+  box-shadow: none;
+  position: relative;
+  z-index: 2;
+  border: 6px solid var(--navy);
+  width: 90vw;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Decorative arch: using an :before to add an arch top if needed */
+.hero:before {
+  content: '';
+  position: absolute;
+  top: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  height: 70px;
+  background: var(--cream);
+  border-top-left-radius: 130px;
+  border-top-right-radius: 130px;
+  border: 6px solid var(--navy);
+  border-bottom: none;
+  z-index: 3;
+}
+
+.hero-inner {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+  z-index: 5;
+  padding-top: 2.5rem;
+  padding-bottom: 40px; /* reduce excess empty space */
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 4.5rem;
+  color: var(--navy);
+  margin: 0;
+  letter-spacing: 6px;
+  font-weight: 700;
+}
+
+/* CASA and MISU styling: MISU spaced letters */
+.hero-title .casa {
+  display: inline-block;
+  color: var(--navy);
+  margin-right: 0.5rem;
+}
+.hero-title .misu {
+  display: inline-block;
+  color: var(--navy);
+  letter-spacing: 0.6rem;
+  position: relative;
+}
+
+/* decorative tiramisu image overlay between MISU letters */
+.hero-title .misu .tiramisu-decor {
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  transform: translateX(-50%);
+  width: 110px;
+  height: auto;
+  pointer-events: none;
+}
+
+.subtitle-small {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  color: var(--navy);
+  letter-spacing: 0.12rem;
+  text-transform: uppercase;
+  margin-top: 0.6rem;
+}
+
+.hero-dec-divider {
+  margin: 1rem auto;
+  width: 140px;
+  height: 1px;
+  background: var(--navy);
+  position: relative;
+}
+
+.hero-dec-divider:after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  transform: translateX(-50%);
+}
+
+.hero-lead {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--navy);
+  margin-bottom: 1.2rem;
+}
+
+/* Placeholder illustrations left and right inside arch */
+.hero-illustration {
+  position: absolute;
+  top: 120px;
+  width: 160px;
+  opacity: 1;
+  border: 2px solid rgba(139,58,42,0.15);
+  background: rgba(255,255,255,0.0);
+  padding: 8px;
+}
+
+.hero-illustration.left {
+  left: 40px;
+}
+.hero-illustration.right {
+  right: 40px;
+}
+
+/* Left and right inline SVG illustrations positioning */
+.hero-illustration.svg-left {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+.hero-illustration.svg-right {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+/* sketch-style icon placeholders (for the three small icons) */
+.hero-icons {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-top: 1.5rem;
+}
+
+.hero-icons .icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--navy);
+}
+
+.hero-icons .icon svg {
+  width: 36px;
+  height: 36px;
+  stroke: var(--rust);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.hero-icons .label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--navy);
+  letter-spacing: 0.1rem;
+}
+
+/* ensure hero sits above stripe background */
+.hero { z-index: 5; }
