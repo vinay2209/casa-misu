@@ -225,16 +225,17 @@
   .hero-logo-full { max-width: 300px; }
   .hero-logo-badge { min-height: 76px; padding: 8px 18px; bottom: -56px; }
   .hero-logo-badge-img { width: 80px; height: 50px; }
-  .hero-sketch { display: none; }
+  .hero-sketch { max-width: min(120px, 22vw); }
   .hero-icons { gap: 24px; }
 }
 
 @media (max-width: 600px) {
-  .hero-nav-left a:nth-child(n+3),
-  .hero-nav-right a:nth-child(n+2) { display: none; }
+  .hero-nav-left > a:nth-of-type(n+2),
+  .hero-nav-right > a:nth-child(n+2) { display: none; }
   .hero-arch { padding: 40px 16px 20px; min-height: 320px; }
   .hero-logo-full { max-width: 240px; }
   .hero-logo-badge { min-height: 68px; padding: 8px 16px; bottom: -50px; }
   .hero-logo-badge-img { width: 72px; height: 44px; }
   .hero-icons { flex-direction: column; gap: 14px; align-items: center; }
+  .hero-sketch { max-width: 72px; top: 48%; }
 }

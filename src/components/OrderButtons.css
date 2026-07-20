@@ -1,9 +1,5 @@
-.btn-order{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:2px;border:none;cursor:pointer;font-family:Montserrat, system-ui, -apple-system;letter-spacing:2px;font-weight:700;font-size:9px;text-transform:uppercase}
-.btn-order svg{display:block}
-.btn-whatsapp{background:var(--navy);color:#fff}
-.btn-whatsapp:hover{background:#152560}
-.btn-zomato{background:transparent;color:#E23744;border:1.5px solid #E23744}
-.btn-zomato .z-dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:#E23744;color:#fff;text-align:center;line-height:14px;font-size:10px;margin-right:6px}
+.btn-order-now{display:inline-flex;align-items:center;justify-content:center;padding:7px 14px;border-radius:999px;background:transparent;border:1.5px solid #1B2E70;color:#1B2E70;cursor:pointer;font-family:Georgia, serif;letter-spacing:0.08em;font-weight:400;font-size:10px;text-transform:uppercase;transition:background 0.2s ease, color 0.2s ease}
+.btn-order-now:hover{background:#1B2E70;color:#fff}
 
 /* Modal backdrop and modal styles */
 .product-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:999}

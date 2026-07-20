@@ -1,4 +1,5 @@
 import './Menu.css'
+import './OrderButtons.css'
 import SectionHeading from './SectionHeading'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
@@ -39,8 +40,13 @@ export default function Menu() {
               <h3>{c.title}</h3>
               <p>{c.desc}</p>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <a className="btn-outline" href="https://wa.me/message/PZKEKYNNK527M1" target="_blank" rel="noopener noreferrer">Order on WhatsApp</a>
-                <a className="btn-outline" href="https://link.zomato.com/xqzv/rshare?id=13836735730563a0f" target="_blank" rel="noopener noreferrer" style={{ borderColor: '#E23744', color: '#E23744' }}>Order on Zomato</a>
+                <button
+                  type="button"
+                  className="btn-order-now"
+                  onClick={() => window.dispatchEvent(new CustomEvent('casamisu:order-now', { detail: { name: c.title, category: c.title.toLowerCase() } }))}
+                >
+                  ORDER NOW
+                </button>
               </div>
             </div>
           </article>

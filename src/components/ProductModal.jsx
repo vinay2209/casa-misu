@@ -61,6 +61,10 @@ const DETAILS = {
   }
 }
 
+function inferCategory(title) {
+  return /COOKIE/i.test(title) ? 'cookies' : 'tiramisu'
+}
+
 export default function ProductModal({ productTitle, onClose }) {
   const info = DETAILS[productTitle] || {
     title: productTitle,
@@ -69,6 +73,14 @@ export default function ProductModal({ productTitle, onClose }) {
     ingredients: '',
     contains: '',
     bestBefore: ''
+  }
+
+  function orderNow(e) {
+    e.stopPropagation()
+    onClose()
+    window.dispatchEvent(new CustomEvent('casamisu:order-now', { detail: { name: productTitle, category: inferCategory(productTitle) } }))
+    const el = document.getElementById('order')
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -91,15 +103,9 @@ export default function ProductModal({ productTitle, onClose }) {
         <div style={{ height: 12 }} />
 
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <a href="https://wa.me/message/PZKEKYNNK527M1" target="_blank" rel="noopener noreferrer" className="btn-order btn-whatsapp" onClick={(e)=>e.stopPropagation()}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#fff" strokeWidth="1.5" fill="none"/></svg>
-            ORDER ON WHATSAPP
-          </a>
-
-          <a href="https://link.zomato.com/xqzv/rshare?id=13836735730563a0f" target="_blank" rel="noopener noreferrer" className="btn-order btn-zomato" onClick={(e)=>e.stopPropagation()}>
-            <span className="z-dot" aria-hidden>Z</span>
-            ORDER ON ZOMATO
-          </a>
+          <button type="button" className="btn-order-now" onClick={orderNow}>
+            ORDER NOW
+          </button>
         </div>
       </div>
     </div>

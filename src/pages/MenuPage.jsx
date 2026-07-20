@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import '../components/FeaturedDesserts.css'
+import '../components/OrderButtons.css'
 import SectionHeading from '../components/SectionHeading'
 
 const initialProducts = [
@@ -56,8 +57,15 @@ export default function MenuPage() {
               <p className="featured-card-desc">{p.desc}</p>
               <p style={{ fontWeight:700, color:'var(--navy)', marginTop:8 }}>{p.price}</p>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <a className="btn-outline" href="https://wa.me/message/PZKEKYNNK527M1" target="_blank" rel="noopener noreferrer">Order on WhatsApp</a>
-                <a className="btn-outline" href="https://link.zomato.com/xqzv/rshare?id=13836735730563a0f" target="_blank" rel="noopener noreferrer" style={{ borderColor: '#E23744', color: '#E23744' }}>Order on Zomato</a>
+                <button
+                  type="button"
+                  className="btn-order-now"
+                  onClick={() => {
+                    window.location.href = `${import.meta.env.BASE_URL}?order=${encodeURIComponent(p.title)}&category=${encodeURIComponent(p.category)}#order`
+                  }}
+                >
+                  ORDER NOW
+                </button>
               </div>
             </div>
           </article>

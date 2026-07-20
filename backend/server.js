@@ -9,6 +9,7 @@ dotenv.config();
 const ordersRouter = require('./routes/orders');
 const menuRouter = require('./routes/menu');
 const adminRouter = require('./routes/admin');
+const galleryRouter = require('./routes/gallery');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use('/api/orders', ordersRouter);
 app.use('/api/menu', menuRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/gallery', galleryRouter);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Casa Misu API running' });

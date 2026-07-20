@@ -19,16 +19,34 @@ const transporter = nodemailer.createTransport({
 // POST /api/orders
 router.post('/', async (req, res) => {
   try {
-    const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount } = req.body;
-    const order = new Order({ customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount });
+    const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount, deliveryType, address, deliveryDate, deliveryTimeSlot, orderType, transactionId, paymentMethod } = req.body;
+    const order = new Order({
+      customerName,
+      customerPhone,
+      customerEmail,
+      items,
+      quantity,
+      specialRequests,
+      totalAmount,
+      deliveryType,
+      address,
+      deliveryDate: deliveryDate || undefined,
+      deliveryTimeSlot,
+      orderType,
+      transactionId,
+      paymentMethod,
+    });
     const saved = await order.save();
 
     // send email to owner
+    const scheduleText = orderType === 'scheduled'
+      ? `Scheduled: ${deliveryDate || 'N/A'} — ${deliveryTimeSlot || 'N/A'}`
+      : 'Scheduled: ASAP (min. 24hrs notice)';
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: process.env.OWNER_EMAIL,
       subject: `New Casa Misu Order from ${customerName}`,
-      text: `Name: ${customerName}\nPhone: ${customerPhone}\nEmail: ${customerEmail || 'N/A'}\nItems: ${items}\nQuantity: ${quantity}\nSpecial Requests: ${specialRequests || 'None'}`
+      text: `Name: ${customerName}\nPhone: ${customerPhone}\nEmail: ${customerEmail || 'N/A'}\nItems: ${items}\nQuantity: ${quantity || 'N/A'}\nDelivery: ${deliveryType || 'pickup'}${address ? `\nAddress: ${address}` : ''}\n${scheduleText}\nTotal: ₹${totalAmount || 'N/A'}\nPayment Method: ${paymentMethod || 'UPI'}\nTransaction ID: ${transactionId || 'N/A'}\nSpecial Requests: ${specialRequests || 'None'}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -64,6 +82,21 @@ router.patch('/:id/status', protect, async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
     order.status = status;
+    await order.save();
+    return res.json(order);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PATCH /api/orders/:id/payment (protected)
+router.patch('/:id/payment', protect, async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    order.paymentStatus = paymentStatus;
     await order.save();
     return res.json(order);
   } catch (err) {

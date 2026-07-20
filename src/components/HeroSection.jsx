@@ -6,6 +6,8 @@ import sketchMix from '../assets/sketch-mix.png'
 const RUST = '#8B3A2A'
 
 export default function HeroSection() {
+  const pagePath = (path) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
+
   return (
     <header id="home" className="hero">
       <div className="hero-stripes">
@@ -19,17 +21,17 @@ export default function HeroSection() {
                     <a href={`#${l.toLowerCase().replace(' ', '-')}`} className="nav-main-link">{l}</a>
 
                     <div className="nav-dropdown" aria-hidden="true">
-                      <a href="/menu?category=all">All</a>
-                      <a href="/menu?category=tiramisu">Tiramisu</a>
-                      <a href="/menu?category=cookies">Cookies</a>
-                      <a href="/menu?category=desserts">Desserts</a>
-                      <a href="/menu?category=gifting">Gifting</a>
+                      <a href={pagePath('?page=menu&category=all')}>All</a>
+                      <a href={pagePath('?page=menu&category=tiramisu')}>Tiramisu</a>
+                      <a href={pagePath('?page=menu&category=cookies')}>Cookies</a>
+                      <a href={pagePath('?page=menu&category=desserts')}>Desserts</a>
+                      <a href={pagePath('?page=menu&category=gifting')}>Gifting</a>
                     </div>
                   </div>
                 )
               }
 
-              const href = l === 'About Us' ? '/about.html' : `#${l.toLowerCase().replace(' ', '-')}`
+              const href = l === 'About Us' ? pagePath('about.html') : `#${l.toLowerCase().replace(' ', '-')}`
               return (
                 <a key={l} href={href}>{l}</a>
               )
