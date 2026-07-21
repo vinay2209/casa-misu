@@ -9,7 +9,8 @@ const CATEGORY_LABELS = {
 }
 
 export default function AdminDashboard(){
-  const [token, setToken] = useState(localStorage.getItem('admin_token') || null)
+  const [token, setToken] = useState(null)
+  const [authState, setAuthState] = useState('checking') // 'checking' | 'logged-in' | 'logged-out'
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
   const [stats, setStats] = useState(null)
@@ -18,7 +19,35 @@ export default function AdminDashboard(){
   const [menuItems, setMenuItems] = useState([])
   const [galleryImages, setGalleryImages] = useState([])
   const [galleryForm, setGalleryForm] = useState({ title: '', imageUrl: '', category: 'all' })
+  const [galleryUploading, setGalleryUploading] = useState(false)
+  const [galleryPreviewUrl, setGalleryPreviewUrl] = useState('')
+  const [menuImageUploading, setMenuImageUploading] = useState(false)
+  const [menuImagePreview, setMenuImagePreview] = useState('')
+  const [menuImageUrl, setMenuImageUrl] = useState('')
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
+
+  // Verify any saved token against the backend on mount so the dashboard
+  // never sits blank — it always resolves to loading, login, or the dashboard.
+  useEffect(() => {
+    const stored = localStorage.getItem('admin_token')
+    if (!stored) { setAuthState('logged-out'); return }
+    fetch('https://casa-misu-production.up.railway.app/api/admin/stats', {
+      headers: { Authorization: `Bearer ${stored}` }
+    })
+      .then(res => {
+        if (res.ok) {
+          setToken(stored)
+          setAuthState('logged-in')
+        } else {
+          localStorage.removeItem('admin_token')
+          setAuthState('logged-out')
+        }
+      })
+      .catch(() => {
+        // Network error — don't nuke the token, just fall back to login
+        setAuthState('logged-out')
+      })
+  }, [])
 
   useEffect(()=>{ if(token) fetchStats(); if(token) fetchOrders(); if(token) fetchMenu(); if(token) fetchGallery(); }, [token])
 
@@ -51,13 +80,13 @@ export default function AdminDashboard(){
     try{
       const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
       const data = await res.json();
-      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); }
+      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setAuthState('logged-in') }
       else alert(data.message || 'Login failed')
     }catch(err){ console.error(err); alert('Login error') }
     setLoading(false);
   }
 
-  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setStats(null); setOrders([]); setGalleryImages([]); }
+  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setAuthState('logged-out'); setStats(null); setOrders([]); setGalleryImages([]); }
 
   async function updateOrderStatus(id, status){
     try{
@@ -111,15 +140,57 @@ export default function AdminDashboard(){
     return aScheduled - bScheduled
   })
 
-  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu-production.up.railway.app/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); }catch(err){ console.error(err) } }
+  async function handleMenuImageUpload(e){
+    const file = e.target.files[0]
+    if(!file) return
+    const localPreview = URL.createObjectURL(file)
+    setMenuImagePreview(localPreview)
+    setMenuImageUploading(true)
+    try{
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      })
+      const data = await res.json()
+      if(data.imageUrl){ setMenuImageUrl(data.imageUrl) }
+      else { alert('Upload failed. Try again.') }
+    }catch(err){ console.error(err); alert('Upload failed. Try again.') }
+    finally{ setMenuImageUploading(false) }
+  }
+
+  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu-production.up.railway.app/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); setMenuImageUrl(''); setMenuImagePreview('') }catch(err){ console.error(err) } }
 
   async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
   async function toggleAvailability(id){ try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}/availability`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
+  async function handleGalleryImageUpload(e){
+    const file = e.target.files[0]
+    if(!file) return
+    const localPreview = URL.createObjectURL(file)
+    setGalleryPreviewUrl(localPreview)
+    setGalleryUploading(true)
+    try{
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      })
+      const data = await res.json()
+      if(data.imageUrl){ setGalleryForm(prev => ({ ...prev, imageUrl: data.imageUrl })) }
+      else { alert('Upload failed. Try again.') }
+    }catch(err){ console.error(err); alert('Upload failed. Try again.') }
+    finally{ setGalleryUploading(false) }
+  }
+
   async function addGalleryImage(e){
     e.preventDefault()
-    if(!galleryForm.imageUrl.trim()){ alert('Image URL is required'); return }
+    if(!galleryForm.imageUrl.trim()){ alert('Please choose an image'); return }
     try{
       await fetch('https://casa-misu-production.up.railway.app/api/gallery', {
         method: 'POST',
@@ -127,6 +198,7 @@ export default function AdminDashboard(){
         body: JSON.stringify(galleryForm),
       })
       setGalleryForm({ title: '', imageUrl: '', category: 'all' })
+      setGalleryPreviewUrl('')
       fetchGallery()
     }catch(err){ console.error(err) }
   }
@@ -163,9 +235,25 @@ export default function AdminDashboard(){
     letterSpacing: '0.06em',
   })
 
+  if (authState === 'checking') {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        fontFamily: 'Georgia, serif',
+        color: '#1B2E70',
+        fontSize: '18px'
+      }}>
+        Loading Casa Misu Admin...
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding:24, fontFamily:'Georgia, serif' }}>
-      {!token && (
+      {authState === 'logged-out' && (
         <div style={{ maxWidth:420, margin:'80px auto', padding:24, border:'1px solid #ccc', borderRadius:8, background:'#FAF6EE' }}>
           <h2 style={{ textAlign:'center', color:'#1B2E70' }}>Casa Misu Admin</h2>
           <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -176,7 +264,7 @@ export default function AdminDashboard(){
         </div>
       )}
 
-      {token && (
+      {authState === 'logged-in' && (
         <div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
             <h2 style={{ color:'#1B2E70' }}>Casa Misu Admin</h2>
@@ -274,7 +362,42 @@ export default function AdminDashboard(){
                 </select>
                 <input name="description" placeholder="Description" style={{ padding:6 }} />
                 <input name="price" type="number" placeholder="Price" required style={{ padding:6 }} />
-                <input name="image" placeholder="Image URL" style={{ padding:6 }} />
+                <input type="hidden" name="image" value={menuImageUrl} />
+                <div style={{
+                  border: '2px dashed #1B2E70',
+                  borderRadius: '8px',
+                  padding: '10px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  background: '#FAF6EE'
+                }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleMenuImageUpload}
+                    style={{ display: 'none' }}
+                    id="menuImageUpload"
+                  />
+                  <label htmlFor="menuImageUpload"
+                    style={{ cursor: 'pointer', color: '#1B2E70', fontSize: 13 }}>
+                    {menuImageUploading ? 'Uploading...' :
+                     menuImagePreview ? '✓ Image selected (click to change)' :
+                     '📷 Choose image from your device'}
+                  </label>
+                  {menuImagePreview && (
+                    <img src={menuImagePreview}
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        objectFit: 'cover',
+                        marginTop: '8px',
+                        borderRadius: '6px',
+                        display: 'block',
+                        margin: '8px auto 0'
+                      }}
+                    />
+                  )}
+                </div>
                 <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" name="isFeatured" /> Featured</label>
                 <button style={{ background:'#1B2E70', color:'#fff', padding:'6px 10px', borderRadius:6 }}>Add</button>
               </form>
@@ -306,10 +429,43 @@ export default function AdminDashboard(){
               <form onSubmit={addGalleryImage} style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20 }}>
                 <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:12 }}>Add New Image</div>
                 <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'flex-end' }}>
-                  <label style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:180 }}>
-                    <span style={{ fontSize:12 }}>Image URL *</span>
-                    <input required value={galleryForm.imageUrl} onChange={e=>setGalleryForm({...galleryForm, imageUrl:e.target.value})} placeholder="https://..." style={{ padding:8 }} />
-                  </label>
+                  <div style={{ flex:1, minWidth:180 }}>
+                    <div style={{
+                      border: '2px dashed #1B2E70',
+                      borderRadius: '8px',
+                      padding: '20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      background: '#FAF6EE'
+                    }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleGalleryImageUpload}
+                        style={{ display: 'none' }}
+                        id="galleryImageUpload"
+                      />
+                      <label htmlFor="galleryImageUpload"
+                        style={{ cursor: 'pointer', color: '#1B2E70' }}>
+                        {galleryUploading ? 'Uploading...' :
+                         galleryPreviewUrl ? '✓ Image selected (click to change)' :
+                         '📷 Click to choose image from your device'}
+                      </label>
+                      {galleryPreviewUrl && (
+                        <img src={galleryPreviewUrl}
+                          style={{
+                            width: '100px',
+                            height: '100px',
+                            objectFit: 'cover',
+                            marginTop: '10px',
+                            borderRadius: '8px',
+                            display: 'block',
+                            margin: '10px auto 0'
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
                   <label style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:140 }}>
                     <span style={{ fontSize:12 }}>Title</span>
                     <input value={galleryForm.title} onChange={e=>setGalleryForm({...galleryForm, title:e.target.value})} placeholder="Image title" style={{ padding:8 }} />
