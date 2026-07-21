@@ -19,7 +19,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: ['http://localhost:5173', 'https://vinay2209.github.io'] }));
 app.use(express.json());
 
 app.use('/api/orders', ordersRouter);
@@ -31,6 +31,12 @@ app.get('/', (req, res) => {
   res.json({ message: 'Casa Misu API running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Vercel imports this file as a serverless function and calls the exported
+// app directly, so only bind a real port when run standalone (e.g. `node server.js`).
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
