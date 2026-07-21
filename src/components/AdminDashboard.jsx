@@ -10,7 +10,7 @@ const CATEGORY_LABELS = {
 
 export default function AdminDashboard(){
   const [token, setToken] = useState(null)
-  const [authState, setAuthState] = useState('checking') // 'checking' | 'logged-in' | 'logged-out'
+  const [isLoggedIn, setIsLoggedIn] = useState('checking') // 'checking' | true | false
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
   const [stats, setStats] = useState(null)
@@ -30,22 +30,22 @@ export default function AdminDashboard(){
   // never sits blank — it always resolves to loading, login, or the dashboard.
   useEffect(() => {
     const stored = localStorage.getItem('admin_token')
-    if (!stored) { setAuthState('logged-out'); return }
+    if (!stored) { setIsLoggedIn(false); return }
     fetch('https://casa-misu-production.up.railway.app/api/admin/stats', {
       headers: { Authorization: `Bearer ${stored}` }
     })
       .then(res => {
         if (res.ok) {
           setToken(stored)
-          setAuthState('logged-in')
+          setIsLoggedIn(true)
         } else {
           localStorage.removeItem('admin_token')
-          setAuthState('logged-out')
+          setIsLoggedIn(false)
         }
       })
       .catch(() => {
         // Network error — don't nuke the token, just fall back to login
-        setAuthState('logged-out')
+        setIsLoggedIn(false)
       })
   }, [])
 
@@ -61,11 +61,11 @@ export default function AdminDashboard(){
     try{
       const url = filter==='all' ? 'https://casa-misu-production.up.railway.app/api/orders' : `https://casa-misu-production.up.railway.app/api/orders?status=${filter}`
       const res = await fetch(url, { headers:{ Authorization: `Bearer ${token}` } })
-      const data = await res.json(); setOrders(data)
+      const data = await res.json(); setOrders(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
   }
   async function fetchMenu(){
-    try{ const res = await fetch('https://casa-misu-production.up.railway.app/api/menu'); const data = await res.json(); setMenuItems(data) }catch(err){ console.error(err) }
+    try{ const res = await fetch('https://casa-misu-production.up.railway.app/api/menu'); const data = await res.json(); setMenuItems(Array.isArray(data) ? data : []) }catch(err){ console.error(err) }
   }
   async function fetchGallery(){
     try{
@@ -80,13 +80,13 @@ export default function AdminDashboard(){
     try{
       const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
       const data = await res.json();
-      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setAuthState('logged-in') }
+      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setIsLoggedIn(true) }
       else alert(data.message || 'Login failed')
     }catch(err){ console.error(err); alert('Login error') }
     setLoading(false);
   }
 
-  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setAuthState('logged-out'); setStats(null); setOrders([]); setGalleryImages([]); }
+  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setIsLoggedIn(false); setStats(null); setOrders([]); setGalleryImages([]); }
 
   async function updateOrderStatus(id, status){
     try{
@@ -235,25 +235,26 @@ export default function AdminDashboard(){
     letterSpacing: '0.06em',
   })
 
-  if (authState === 'checking') {
+  if (isLoggedIn === 'checking') {
     return (
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
         minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         fontFamily: 'Georgia, serif',
         color: '#1B2E70',
-        fontSize: '18px'
+        fontSize: '20px',
+        background: '#FAF6EE'
       }}>
         Loading Casa Misu Admin...
       </div>
     )
   }
 
-  return (
-    <div style={{ padding:24, fontFamily:'Georgia, serif' }}>
-      {authState === 'logged-out' && (
+  if (isLoggedIn !== true) {
+    return (
+      <div style={{ padding:24, fontFamily:'Georgia, serif' }}>
         <div style={{ maxWidth:420, margin:'80px auto', padding:24, border:'1px solid #ccc', borderRadius:8, background:'#FAF6EE' }}>
           <h2 style={{ textAlign:'center', color:'#1B2E70' }}>Casa Misu Admin</h2>
           <form onSubmit={handleLogin} style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -262,10 +263,13 @@ export default function AdminDashboard(){
             <button style={{ background:'#1B2E70', color:'#fff', padding:10, borderRadius:6 }} disabled={loading}>{loading? 'Loading...':'Login'}</button>
           </form>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {authState === 'logged-in' && (
-        <div>
+  return (
+    <div style={{ padding:24, fontFamily:'Georgia, serif' }}>
+      <div>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
             <h2 style={{ color:'#1B2E70' }}>Casa Misu Admin</h2>
             <button onClick={logout} style={{ background:'#8B3A2A', color:'#fff', padding:'8px 12px', borderRadius:6 }}>Logout</button>
@@ -517,7 +521,6 @@ export default function AdminDashboard(){
           )}
 
         </div>
-      )}
     </div>
   )
 }
