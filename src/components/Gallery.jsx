@@ -19,7 +19,7 @@ export default function Gallery() {
 
   async function fetchGallery() {
     try {
-      const res = await fetch('http://localhost:5050/api/gallery')
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/gallery')
       const data = await res.json()
       setImages(Array.isArray(data) ? data : [])
     } catch (err) {

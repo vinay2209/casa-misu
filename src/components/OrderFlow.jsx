@@ -257,7 +257,7 @@ export default function OrderFlow() {
 
   async function fetchProducts() {
     try {
-      const res = await fetch('http://localhost:5050/api/menu')
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/menu')
       const data = await res.json()
       if (Array.isArray(data) && data.length > 0) {
         setProducts(
@@ -408,7 +408,7 @@ export default function OrderFlow() {
     setTxnError(false)
     setSubmitting(true)
     try {
-      const res = await fetch('http://localhost:5050/api/orders', {
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -13,7 +13,7 @@ export default function OrderForm(){
     e.preventDefault();
     setStatus('loading');
     try{
-      const res = await fetch('http://localhost:5050/api/orders', {
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/orders', {
         method: 'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(form)
       });
       const data = await res.json();

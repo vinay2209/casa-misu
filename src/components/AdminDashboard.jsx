@@ -24,23 +24,23 @@ export default function AdminDashboard(){
 
   async function fetchStats(){
     try{
-      const res = await fetch('http://localhost:5050/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json(); setStats(data)
     }catch(err){ console.error(err) }
   }
   async function fetchOrders(){
     try{
-      const url = filter==='all' ? 'http://localhost:5050/api/orders' : `http://localhost:5050/api/orders?status=${filter}`
+      const url = filter==='all' ? 'https://casa-misu-production.up.railway.app/api/orders' : `https://casa-misu-production.up.railway.app/api/orders?status=${filter}`
       const res = await fetch(url, { headers:{ Authorization: `Bearer ${token}` } })
       const data = await res.json(); setOrders(data)
     }catch(err){ console.error(err) }
   }
   async function fetchMenu(){
-    try{ const res = await fetch('http://localhost:5050/api/menu'); const data = await res.json(); setMenuItems(data) }catch(err){ console.error(err) }
+    try{ const res = await fetch('https://casa-misu-production.up.railway.app/api/menu'); const data = await res.json(); setMenuItems(data) }catch(err){ console.error(err) }
   }
   async function fetchGallery(){
     try{
-      const res = await fetch('http://localhost:5050/api/gallery', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/gallery', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       setGalleryImages(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
@@ -49,7 +49,7 @@ export default function AdminDashboard(){
   async function handleLogin(e){
     e.preventDefault(); setLoading(true);
     try{
-      const res = await fetch('http://localhost:5050/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
+      const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
       const data = await res.json();
       if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); }
       else alert(data.message || 'Login failed')
@@ -61,16 +61,16 @@ export default function AdminDashboard(){
 
   async function updateOrderStatus(id, status){
     try{
-      await fetch(`http://localhost:5050/api/orders/${id}/status`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
+      await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}/status`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
       fetchOrders(); fetchStats();
     }catch(err){ console.error(err) }
   }
 
-  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`http://localhost:5050/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); }catch(err){ console.error(err) } }
+  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); }catch(err){ console.error(err) } }
 
   async function markPaymentVerified(id){
     try{
-      await fetch(`http://localhost:5050/api/orders/${id}/payment`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ paymentStatus: 'verified' }) })
+      await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}/payment`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ paymentStatus: 'verified' }) })
       fetchOrders()
     }catch(err){ console.error(err) }
   }
@@ -111,17 +111,17 @@ export default function AdminDashboard(){
     return aScheduled - bScheduled
   })
 
-  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('http://localhost:5050/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); }catch(err){ console.error(err) } }
+  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu-production.up.railway.app/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); }catch(err){ console.error(err) } }
 
-  async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`http://localhost:5050/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
+  async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
-  async function toggleAvailability(id){ try{ await fetch(`http://localhost:5050/api/menu/${id}/availability`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
+  async function toggleAvailability(id){ try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}/availability`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
   async function addGalleryImage(e){
     e.preventDefault()
     if(!galleryForm.imageUrl.trim()){ alert('Image URL is required'); return }
     try{
-      await fetch('http://localhost:5050/api/gallery', {
+      await fetch('https://casa-misu-production.up.railway.app/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(galleryForm),
@@ -133,7 +133,7 @@ export default function AdminDashboard(){
 
   async function toggleGalleryVisibility(id, currentVisible){
     try{
-      await fetch(`http://localhost:5050/api/gallery/${id}`, {
+      await fetch(`https://casa-misu-production.up.railway.app/api/gallery/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isVisible: !currentVisible }),
@@ -145,7 +145,7 @@ export default function AdminDashboard(){
   async function deleteGalleryImage(id){
     if(!confirm('Delete this gallery image?')) return
     try{
-      await fetch(`http://localhost:5050/api/gallery/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      await fetch(`https://casa-misu-production.up.railway.app/api/gallery/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
       fetchGallery()
     }catch(err){ console.error(err) }
   }
