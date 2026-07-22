@@ -10,7 +10,7 @@ const CATEGORY_LABELS = {
 
 export default function AdminDashboard(){
   const [token, setToken] = useState(null)
-  const [isLoggedIn, setIsLoggedIn] = useState('checking') // 'checking' | true | false
+  const [authState, setAuthState] = useState('checking') // 'checking' | true | false
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
   const [stats, setStats] = useState(null)
@@ -30,22 +30,25 @@ export default function AdminDashboard(){
   // never sits blank — it always resolves to loading, login, or the dashboard.
   useEffect(() => {
     const stored = localStorage.getItem('admin_token')
-    if (!stored) { setIsLoggedIn(false); return }
+    if (!stored) {
+      setAuthState(false)
+      return
+    }
     fetch('https://casa-misu-production.up.railway.app/api/admin/stats', {
       headers: { Authorization: `Bearer ${stored}` }
     })
       .then(res => {
-        if (res.ok) {
-          setToken(stored)
-          setIsLoggedIn(true)
-        } else {
-          localStorage.removeItem('admin_token')
-          setIsLoggedIn(false)
-        }
+        if (res.ok) return res.json()
+        throw new Error('unauthorized')
+      })
+      .then(data => {
+        setToken(stored)
+        setStats(data)
+        setAuthState(true)
       })
       .catch(() => {
-        // Network error — don't nuke the token, just fall back to login
-        setIsLoggedIn(false)
+        localStorage.removeItem('admin_token')
+        setAuthState(false)
       })
   }, [])
 
@@ -80,13 +83,13 @@ export default function AdminDashboard(){
     try{
       const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
       const data = await res.json();
-      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setIsLoggedIn(true) }
+      if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setAuthState(true) }
       else alert(data.message || 'Login failed')
     }catch(err){ console.error(err); alert('Login error') }
     setLoading(false);
   }
 
-  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setIsLoggedIn(false); setStats(null); setOrders([]); setGalleryImages([]); }
+  function logout(){ localStorage.removeItem('admin_token'); setToken(null); setAuthState(false); setStats(null); setOrders([]); setGalleryImages([]); }
 
   async function updateOrderStatus(id, status){
     try{
@@ -235,7 +238,7 @@ export default function AdminDashboard(){
     letterSpacing: '0.06em',
   })
 
-  if (isLoggedIn === 'checking') {
+  if (authState === 'checking') {
     return (
       <div style={{
         minHeight: '100vh',
@@ -252,7 +255,7 @@ export default function AdminDashboard(){
     )
   }
 
-  if (isLoggedIn !== true) {
+  if (authState !== true) {
     return (
       <div style={{ padding:24, fontFamily:'Georgia, serif' }}>
         <div style={{ maxWidth:420, margin:'80px auto', padding:24, border:'1px solid #ccc', borderRadius:8, background:'#FAF6EE' }}>
