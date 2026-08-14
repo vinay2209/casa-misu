@@ -68,7 +68,6 @@ export default function Footer() {
             <li><a className="footer-social-link" href="https://wa.me/message/PZKEKYNNK527M1" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp to reserve</a></li>
             <li><a className="footer-social-link" href="https://www.instagram.com/casa_misuuuuu/" target="_blank" rel="noopener noreferrer"><InstagramIcon /> @casa_misuuuu</a></li>
             <li><a className="footer-social-link" href="mailto:casamisuuuuu2026@gmail.com"><EmailIcon /> casamisuuuuu2026@gmail.com</a></li>
-            <li>Goregaon, Mumbai</li>
           </ul>
           <img src={floralSketch} alt="" className="footer-floral" aria-hidden="true"/>
         </div>
