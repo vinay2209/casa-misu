@@ -16,13 +16,28 @@ const initialProducts = [
 
 export default function MenuPage() {
   const [category, setCategory] = useState('all')
-  const [products, setProducts] = useState([])
+  const [products, setProducts] = useState(initialProducts)
 
   useEffect(() => {
-    // read from localStorage if present else use initialProducts
-    const stored = localStorage.getItem('casa_products')
-    if (stored) setProducts(JSON.parse(stored))
-    else { setProducts(initialProducts); localStorage.setItem('casa_products', JSON.stringify(initialProducts)) }
+    // Pull the real, admin-managed menu; fall back to the demo list only
+    // if the backend has nothing yet, so the page is never empty.
+    fetch('https://casa-misu-production.up.railway.app/api/menu')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts(
+            data.map((item) => ({
+              id: item._id,
+              category: item.category,
+              title: item.name,
+              desc: item.description || '',
+              price: `₹${item.price}`,
+              image: item.image,
+            }))
+          )
+        }
+      })
+      .catch((err) => console.error(err))
 
     // read URL param
     const params = new URLSearchParams(window.location.search)
@@ -45,8 +60,8 @@ export default function MenuPage() {
       <div className="featured-grid">
         {filtered.map(p => (
           <article key={p.id} className="featured-card">
-            {p.imageBase64 ? (
-              <div className="featured-card-img" style={{ backgroundImage: `url(${p.imageBase64})`, backgroundSize:'cover', backgroundPosition:'center' }} />
+            {p.image ? (
+              <div className="featured-card-img" style={{ backgroundImage: `url(${p.image})`, backgroundSize:'cover', backgroundPosition:'center' }} />
             ) : (
               <div className="featured-card-img" style={{ background: 'linear-gradient(180deg,#FAF6EE,#fff)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B3A2A', fontWeight:700 }}>
                 {p.title}

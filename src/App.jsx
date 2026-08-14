@@ -5,6 +5,7 @@ import FeaturedDesserts from './components/FeaturedDesserts'
 import Menu from './components/Menu'
 import ReserveOrder from './components/ReserveOrder'
 import OrderFlow from './components/OrderFlow'
+import FAQ from './components/FAQ'
 import Footer from './components/Footer'
 import AdminDashboard from './components/AdminDashboard'
 import MenuPage from './pages/MenuPage'
@@ -41,6 +42,7 @@ export default function App() {
         <FeaturedDesserts />
         <Menu />
         <OrderFlow />
+        <FAQ />
         <Footer />
         <ReserveOrder />
       </div>
