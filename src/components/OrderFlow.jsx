@@ -6,7 +6,7 @@ const CREAM = '#FAF6EE'
 const RUST = '#8B3A2A'
 const WHATSAPP_GREEN = '#25D366'
 const OWNER_PHONE = '918591519345'
-const UPI_ID = 'casamisu@upi'
+const UPI_ID = '8591519345@kotakbank'
 
 const DEFAULT_PRODUCTS = [
   { id: 'default-1', name: 'Classic Tiramisu', price: 350, image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&q=80', category: 'tiramisu' },
@@ -677,7 +677,14 @@ export default function OrderFlow() {
 
               <div style={styles.orDivider}>— OR —</div>
 
-              <div style={styles.qrBox}>Scan QR to Pay</div>
+              <div style={styles.qrBox}>
+                <img
+                  src={`${import.meta.env.BASE_URL}upi-qr.jpg`}
+                  alt="Scan to pay via UPI"
+                  style={styles.qrImage}
+                />
+              </div>
+              <p style={styles.qrCaption}>Scan QR to Pay</p>
 
               <label style={{ ...styles.label, marginTop: 16 }}>
                 Transaction ID / UTR *
@@ -1158,17 +1165,27 @@ const styles = {
   qrBox: {
     width: 200,
     height: 200,
-    border: `1.5px dashed ${NAVY}`,
+    border: `1.5px solid ${NAVY}`,
     borderRadius: 8,
     margin: '4px auto 0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    padding: 8,
+    boxSizing: 'border-box',
+  },
+  qrImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+  },
+  qrCaption: {
     color: NAVY,
     fontFamily: 'Georgia, serif',
     fontSize: 13,
     textAlign: 'center',
-    padding: 12,
+    margin: '8px 0 0',
   },
   checkmark: {
     margin: '0 auto 16px',
