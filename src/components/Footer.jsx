@@ -17,6 +17,14 @@ function InstagramIcon() {
   )
 }
 
+function EmailIcon() {
+  return (
+    <svg className="footer-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 2.24V6l8 5.99L20 6v-.01L12 12 4 6.24Zm0 2.52V18h16V8.76l-7.4 5.55a1 1 0 0 1-1.2 0L4 8.76Z" />
+    </svg>
+  )
+}
+
 export default function Footer() {
   const pagePath = (path) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
 
@@ -47,7 +55,11 @@ export default function Footer() {
 
         <div className="footer-col footer-center">
           <p className="footer-location">📍 Goregaon, Mumbai</p>
-          <p className="footer-fssai">✓ FSSAI Registered</p>
+          <p className="footer-fssai">
+            <a className="footer-fssai-link" href={pagePath('fssai-license.pdf')} target="_blank" rel="noopener noreferrer">
+              ✓ FSSAI Registered · 21526009000496
+            </a>
+          </p>
         </div>
 
         <div className="footer-col footer-contact">
@@ -55,6 +67,7 @@ export default function Footer() {
           <ul>
             <li><a className="footer-social-link" href="https://wa.me/message/PZKEKYNNK527M1" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp to reserve</a></li>
             <li><a className="footer-social-link" href="https://www.instagram.com/casa_misuuuuu/" target="_blank" rel="noopener noreferrer"><InstagramIcon /> @casa_misuuuu</a></li>
+            <li><a className="footer-social-link" href="mailto:casamisuuuuu2026@gmail.com"><EmailIcon /> casamisuuuuu2026@gmail.com</a></li>
             <li>Goregaon, Mumbai</li>
           </ul>
           <img src={floralSketch} alt="" className="footer-floral" aria-hidden="true"/>
