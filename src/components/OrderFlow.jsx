@@ -477,22 +477,24 @@ export default function OrderFlow() {
         {step === 1 && (
           <div style={styles.stepBox} className="order-step-enter">
             <h2 style={styles.stepTitle}>What would you like to order?</h2>
-            <div style={styles.productGrid}>
-              {products.map((product) => {
+            <div style={styles.productList}>
+              {products.map((product, i) => {
                 const qty = getQty(product.id)
                 const selected = qty > 0
                 return (
                   <article
                     key={product.id}
                     style={{
-                      ...styles.productCard,
-                      borderColor: selected ? RUST : NAVY,
-                      boxShadow: selected ? `0 0 0 2px ${RUST}` : 'none',
+                      ...styles.productRow,
+                      background: selected ? '#fdf6f4' : 'transparent',
+                      borderBottom: i === products.length - 1 ? 'none' : '1px solid rgba(27,46,112,0.15)',
                     }}
                   >
-                    <img src={product.image} alt={product.name} style={styles.productImg} />
-                    <h3 style={styles.productName}>{product.name}</h3>
-                    <p style={styles.productPrice}>{formatCurrency(product.price)}</p>
+                    <img src={product.image} alt={product.name} style={styles.productRowImg} />
+                    <div style={styles.productRowBody}>
+                      <h3 style={styles.productName}>{product.name}</h3>
+                      <p style={styles.productPrice}>{formatCurrency(product.price)}</p>
+                    </div>
                     <div style={styles.qtyRow}>
                       <button type="button" style={styles.qtyBtn} onClick={() => updateQty(product, -1)} aria-label="Decrease quantity">−</button>
                       <span style={styles.qtyNum}>{qty}</span>
@@ -829,26 +831,33 @@ const styles = {
     margin: '0 0 20px',
     textAlign: 'center',
   },
-  productGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: 14,
-    marginBottom: 20,
-  },
-  productCard: {
-    background: '#fff',
+  productList: {
+    display: 'flex',
+    flexDirection: 'column',
     border: `2px solid ${NAVY}`,
     borderRadius: 10,
-    padding: 12,
-    textAlign: 'center',
-    transition: 'box-shadow 0.2s, border-color 0.2s',
+    background: '#fff',
+    overflow: 'hidden',
+    marginBottom: 20,
   },
-  productImg: {
-    width: '100%',
-    height: 120,
+  productRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    padding: '10px 14px',
+    transition: 'background 0.15s',
+  },
+  productRowImg: {
+    width: 76,
+    height: 76,
     objectFit: 'cover',
-    borderRadius: 6,
-    marginBottom: 8,
+    borderRadius: 8,
+    flexShrink: 0,
+  },
+  productRowBody: {
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'left',
   },
   productName: {
     color: NAVY,
@@ -859,18 +868,19 @@ const styles = {
   productPrice: {
     color: RUST,
     fontWeight: 600,
-    margin: '0 0 10px',
+    margin: 0,
     fontSize: 15,
   },
   qtyRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: 10,
+    flexShrink: 0,
   },
   qtyBtn: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: '50%',
     border: `2px solid ${NAVY}`,
     background: 'transparent',

@@ -57,13 +57,7 @@ export default function FeaturedDesserts() {
 							<h3>{p.title}</h3>
 							<p className="featured-card-desc">{p.desc}</p>
 
-							<div
-								style={{
-									display: 'flex',
-									gap: 8,
-									marginTop: 'auto',
-								}}
-							>
+							<div className="featured-card-footer">
 								<button
 									type="button"
 									className="btn-order-now"
