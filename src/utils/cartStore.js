@@ -24,13 +24,16 @@ export function getCart() {
   return readCart()
 }
 
+const MAX_QUANTITY = 5
+
 // Adds a fully-configured item (name, category, size, price, quantity,
 // dietaryPreference, message, image) and opens the cart drawer.
 export function addToCart(item) {
   const cart = readCart()
   const id = keyFor(item)
   const existing = cart[id]
-  cart[id] = { ...item, id, quantity: (existing?.quantity || 0) + (item.quantity || 1) }
+  const quantity = Math.min(MAX_QUANTITY, (existing?.quantity || 0) + (item.quantity || 1))
+  cart[id] = { ...item, id, quantity }
   writeCart(cart)
   window.dispatchEvent(new CustomEvent('casamisu:open-cart'))
 }
@@ -41,7 +44,7 @@ export function updateQuantity(id, quantity) {
   if (quantity <= 0) {
     delete cart[id]
   } else {
-    cart[id] = { ...cart[id], quantity }
+    cart[id] = { ...cart[id], quantity: Math.min(MAX_QUANTITY, quantity) }
   }
   writeCart(cart)
 }

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { STORE_LAT, STORE_LNG, DELIVERY_RADIUS_KM } = require('../utils/store');
+const { STORE_LAT, STORE_LNG, DELIVERY_LAT_MIN, DELIVERY_LAT_MAX, DELIVERY_LNG_MIN, DELIVERY_LNG_MAX } = require('../utils/store');
 
 // Nominatim (OpenStreetMap) has no CORS headers, so this can't be called
 // directly from the browser — the frontend calls this route instead, which
@@ -41,7 +41,11 @@ router.get('/check', async (req, res) => {
     }
 
     const distanceKm = haversineKm(STORE_LAT, STORE_LNG, coords.lat, coords.lng);
-    const eligible = distanceKm <= DELIVERY_RADIUS_KM;
+    const eligible =
+      coords.lat >= DELIVERY_LAT_MIN &&
+      coords.lat <= DELIVERY_LAT_MAX &&
+      coords.lng >= DELIVERY_LNG_MIN &&
+      coords.lng <= DELIVERY_LNG_MAX;
     return res.json({ found: true, eligible, distanceKm: Math.round(distanceKm * 10) / 10 });
   } catch (err) {
     console.error(err);

@@ -77,11 +77,19 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
       </label>
 
       <div style={styles.field}>
-        <span style={styles.label}>Quantity</span>
+        <span style={styles.label}>Quantity{quantity >= 5 ? ' (max 5 per order)' : ''}</span>
         <div style={styles.qtyRow}>
           <button type="button" style={styles.qtyBtn} onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button>
           <span style={styles.qtyNum}>{quantity}</span>
-          <button type="button" style={styles.qtyBtn} onClick={() => setQuantity((q) => q + 1)} aria-label="Increase quantity">+</button>
+          <button
+            type="button"
+            style={{ ...styles.qtyBtn, ...(quantity >= 5 ? styles.qtyBtnDisabled : {}) }}
+            onClick={() => setQuantity((q) => Math.min(5, q + 1))}
+            aria-label="Increase quantity"
+            disabled={quantity >= 5}
+          >
+            +
+          </button>
         </div>
       </div>
 
@@ -159,6 +167,10 @@ const styles = {
     fontSize: 18,
     cursor: 'pointer',
     lineHeight: 1,
+  },
+  qtyBtnDisabled: {
+    opacity: 0.35,
+    cursor: 'not-allowed',
   },
   qtyNum: {
     fontWeight: 700,

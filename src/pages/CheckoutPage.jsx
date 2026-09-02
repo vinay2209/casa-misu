@@ -403,7 +403,15 @@ export default function CheckoutPage() {
                 <div style={styles.qtyRow}>
                   <button type="button" style={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">−</button>
                   <span style={styles.qtyNum}>{item.quantity}</span>
-                  <button type="button" style={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">+</button>
+                  <button
+                    type="button"
+                    style={{ ...styles.qtyBtn, ...(item.quantity >= 5 ? styles.qtyBtnDisabled : {}) }}
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    aria-label="Increase quantity"
+                    disabled={item.quantity >= 5}
+                  >
+                    +
+                  </button>
                   <button type="button" style={styles.removeBtn} onClick={() => removeFromCart(item.id)}>Remove</button>
                 </div>
               </div>
@@ -657,6 +665,10 @@ const styles = {
     cursor: 'pointer',
     lineHeight: 1,
     padding: 0,
+  },
+  qtyBtnDisabled: {
+    opacity: 0.35,
+    cursor: 'not-allowed',
   },
   qtyNum: {
     fontSize: 12,
