@@ -35,7 +35,7 @@ export default function MenuPage() {
   useEffect(() => {
     // Pull the real, admin-managed menu; fall back to the demo list only
     // if the backend has nothing yet, so the page is never empty.
-    fetch('https://casa-misu-production.up.railway.app/api/menu')
+    fetch('https://casa-misu.onrender.com/api/menu')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

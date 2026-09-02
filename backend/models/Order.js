@@ -17,7 +17,11 @@ const OrderSchema = new mongoose.Schema({
   orderType: { type: String, enum: ['asap','scheduled'], default: 'asap' },
   transactionId: { type: String },
   paymentStatus: { type: String, enum: ['pending','verified','failed'], default: 'pending' },
-  paymentMethod: { type: String, default: 'UPI' }
+  paymentMethod: { type: String, default: 'UPI' },
+  deliveryFee: { type: Number, default: 0 },
+  deliveryPincode: { type: String },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String }
 });
 
 module.exports = mongoose.model('Order', OrderSchema);

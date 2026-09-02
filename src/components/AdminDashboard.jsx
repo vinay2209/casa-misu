@@ -34,7 +34,7 @@ export default function AdminDashboard(){
       setAuthState(false)
       return
     }
-    fetch('https://casa-misu-production.up.railway.app/api/admin/stats', {
+    fetch('https://casa-misu.onrender.com/api/admin/stats', {
       headers: { Authorization: `Bearer ${stored}` }
     })
       .then(res => {
@@ -56,23 +56,23 @@ export default function AdminDashboard(){
 
   async function fetchStats(){
     try{
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('https://casa-misu.onrender.com/api/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json(); setStats(data)
     }catch(err){ console.error(err) }
   }
   async function fetchOrders(){
     try{
-      const url = filter==='all' ? 'https://casa-misu-production.up.railway.app/api/orders' : `https://casa-misu-production.up.railway.app/api/orders?status=${filter}`
+      const url = filter==='all' ? 'https://casa-misu.onrender.com/api/orders' : `https://casa-misu.onrender.com/api/orders?status=${filter}`
       const res = await fetch(url, { headers:{ Authorization: `Bearer ${token}` } })
       const data = await res.json(); setOrders(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
   }
   async function fetchMenu(){
-    try{ const res = await fetch('https://casa-misu-production.up.railway.app/api/menu'); const data = await res.json(); setMenuItems(Array.isArray(data) ? data : []) }catch(err){ console.error(err) }
+    try{ const res = await fetch('https://casa-misu.onrender.com/api/menu'); const data = await res.json(); setMenuItems(Array.isArray(data) ? data : []) }catch(err){ console.error(err) }
   }
   async function fetchGallery(){
     try{
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/gallery', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch('https://casa-misu.onrender.com/api/gallery', { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       setGalleryImages(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
@@ -81,7 +81,7 @@ export default function AdminDashboard(){
   async function handleLogin(e){
     e.preventDefault(); setLoading(true);
     try{
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
+      const res = await fetch('https://casa-misu.onrender.com/api/admin/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(loginForm) })
       const data = await res.json();
       if(res.ok && data.token){ localStorage.setItem('admin_token', data.token); setToken(data.token); setAuthState(true) }
       else alert(data.message || 'Login failed')
@@ -93,16 +93,16 @@ export default function AdminDashboard(){
 
   async function updateOrderStatus(id, status){
     try{
-      await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}/status`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
+      await fetch(`https://casa-misu.onrender.com/api/orders/${id}/status`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
       fetchOrders(); fetchStats();
     }catch(err){ console.error(err) }
   }
 
-  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); }catch(err){ console.error(err) } }
+  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`https://casa-misu.onrender.com/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); }catch(err){ console.error(err) } }
 
   async function markPaymentVerified(id){
     try{
-      await fetch(`https://casa-misu-production.up.railway.app/api/orders/${id}/payment`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ paymentStatus: 'verified' }) })
+      await fetch(`https://casa-misu.onrender.com/api/orders/${id}/payment`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ paymentStatus: 'verified' }) })
       fetchOrders()
     }catch(err){ console.error(err) }
   }
@@ -157,7 +157,7 @@ export default function AdminDashboard(){
     try{
       const formData = new FormData()
       formData.append('image', file)
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/upload', {
+      const res = await fetch('https://casa-misu.onrender.com/api/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -169,11 +169,11 @@ export default function AdminDashboard(){
     finally{ setMenuImageUploading(false) }
   }
 
-  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu-production.up.railway.app/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); setMenuImageUrl(''); setMenuImagePreview('') }catch(err){ console.error(err) } }
+  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu.onrender.com/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); setMenuImageUrl(''); setMenuImagePreview('') }catch(err){ console.error(err) } }
 
-  async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
+  async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`https://casa-misu.onrender.com/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
-  async function toggleAvailability(id){ try{ await fetch(`https://casa-misu-production.up.railway.app/api/menu/${id}/availability`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
+  async function toggleAvailability(id){ try{ await fetch(`https://casa-misu.onrender.com/api/menu/${id}/availability`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
   async function handleGalleryImageUpload(e){
     const file = e.target.files[0]
@@ -184,7 +184,7 @@ export default function AdminDashboard(){
     try{
       const formData = new FormData()
       formData.append('image', file)
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/upload', {
+      const res = await fetch('https://casa-misu.onrender.com/api/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -200,7 +200,7 @@ export default function AdminDashboard(){
     e.preventDefault()
     if(!galleryForm.imageUrl.trim()){ alert('Please choose an image'); return }
     try{
-      await fetch('https://casa-misu-production.up.railway.app/api/gallery', {
+      await fetch('https://casa-misu.onrender.com/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(galleryForm),
@@ -213,7 +213,7 @@ export default function AdminDashboard(){
 
   async function toggleGalleryVisibility(id, currentVisible){
     try{
-      await fetch(`https://casa-misu-production.up.railway.app/api/gallery/${id}`, {
+      await fetch(`https://casa-misu.onrender.com/api/gallery/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isVisible: !currentVisible }),
@@ -225,7 +225,7 @@ export default function AdminDashboard(){
   async function deleteGalleryImage(id){
     if(!confirm('Delete this gallery image?')) return
     try{
-      await fetch(`https://casa-misu-production.up.railway.app/api/gallery/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      await fetch(`https://casa-misu.onrender.com/api/gallery/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
       fetchGallery()
     }catch(err){ console.error(err) }
   }

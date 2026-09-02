@@ -1,4 +1,5 @@
 import ProductOptionsForm from './ProductOptionsForm'
+import { addItemToOrder } from '../utils/cartBridge'
 
 const NAVY = '#1B2E70'
 
@@ -11,9 +12,7 @@ export default function ProductOptionsModal({ product, onClose }) {
 
   function handleAdd(configuredItem) {
     onClose()
-    window.dispatchEvent(new CustomEvent('casamisu:add-configured-item', { detail: configuredItem }))
-    const el = document.getElementById('order')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+    addItemToOrder({ ...configuredItem, image: product.image })
   }
 
   return (

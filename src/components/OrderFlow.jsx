@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
-import logo from '../assets/logo.png'
 import { SIZE_OPTIONS } from '../constants/sizeOptions'
+import { STORE_ADDRESS, DELIVERY_FEE } from '../constants/store'
+import { PENDING_ITEM_KEY } from '../utils/cartBridge'
+import CartDrawer from './CartDrawer'
 
+const API_BASE = 'https://casa-misu.onrender.com'
 const NAVY = '#1B2E70'
 const CREAM = '#FAF6EE'
 const RUST = '#8B3A2A'
 const WHATSAPP_GREEN = '#25D366'
 const OWNER_PHONE = '918591519345'
-const UPI_ID = '8591519345@kotakbank'
 
 const DEFAULT_PRODUCTS = [
   { id: 'default-1', name: 'Classic Tiramisu', price: 350, image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&q=80', category: 'tiramisu' },
@@ -45,13 +47,22 @@ function todayPlusDaysISO(days) {
   return d.toISOString().slice(0, 10)
 }
 
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true)
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
 function ProgressSteps({ step }) {
   const steps = [
     { num: 1, label: 'Products' },
-    { num: 2, label: 'Method' },
-    { num: 3, label: 'Details' },
-    { num: 4, label: 'Payment' },
-    { num: 5, label: 'Done' },
+    { num: 2, label: 'Checkout' },
+    { num: 3, label: 'Done' },
   ]
 
   return (
@@ -82,7 +93,7 @@ function ProgressSteps({ step }) {
   )
 }
 
-function CartSummary({ cart, total }) {
+function CartSummary({ cart, total, hideTotal }) {
   const items = Object.values(cart).filter((c) => c.quantity > 0)
   if (items.length === 0) return <p style={{ color: '#666', fontStyle: 'italic', margin: 0 }}>No items selected yet</p>
 
@@ -102,10 +113,12 @@ function CartSummary({ cart, total }) {
           )}
         </div>
       ))}
-      <div style={styles.cartTotal}>
-        <span>Total</span>
-        <span style={{ color: RUST, fontWeight: 700 }}>{formatCurrency(total)}</span>
-      </div>
+      {!hideTotal && (
+        <div style={styles.cartTotal}>
+          <span>Total</span>
+          <span style={{ color: RUST, fontWeight: 700 }}>{formatCurrency(total)}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -161,7 +174,6 @@ function ScheduleSection({ schedule, setSchedule }) {
 
   return (
     <div style={styles.scheduleBox}>
-      <h4 style={styles.scheduleLabel}>When would you like your order?</h4>
       <div style={styles.scheduleToggleRow}>
         <button
           type="button"
@@ -186,7 +198,7 @@ function ScheduleSection({ schedule, setSchedule }) {
       {schedule.orderType === 'scheduled' && (
         <div style={styles.scheduleFields}>
           <label style={styles.label}>
-            Delivery Date
+            Date
             <input
               type="date"
               min={minDate}
@@ -221,18 +233,19 @@ export default function OrderFlow() {
   const [step, setStep] = useState(1)
   const [products, setProducts] = useState(DEFAULT_PRODUCTS)
   const [cart, setCart] = useState({})
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [customerName, setCustomerName] = useState('')
   const [sizeError, setSizeError] = useState(false)
   const [schedule, setSchedule] = useState({ orderType: 'asap', deliveryDate: '', deliveryTimeSlot: '' })
-  const [transactionId, setTransactionId] = useState('')
-  const [txnError, setTxnError] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [shippingMethod, setShippingMethod] = useState('pickup')
+  const [pincode, setPincode] = useState('')
+  const [pincodeCheck, setPincodeCheck] = useState({ status: 'idle', eligible: null, distanceKm: null })
+  const [checkoutError, setCheckoutError] = useState('')
   const [form, setForm] = useState({
     customerName: '',
     customerPhone: '',
     customerEmail: '',
-    deliveryType: 'pickup',
     address: '',
     specialRequests: '',
   })
@@ -243,7 +256,7 @@ export default function OrderFlow() {
 
   async function fetchProducts() {
     try {
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/menu')
+      const res = await fetch(`${API_BASE}/api/menu`)
       const data = await res.json()
       if (Array.isArray(data) && data.length > 0) {
         setProducts(
@@ -261,36 +274,30 @@ export default function OrderFlow() {
     }
   }
 
-  // Listen for "Order Now" clicks dispatched from product cards elsewhere on the page
+  // "Order Now" quick-add from the homepage featured section — no size
+  // chosen yet, so scroll to the product list instead of opening the drawer.
   useEffect(() => {
-    function handleExternalOrder(e) {
-      try {
-        const { name, category } = e.detail || {}
-        if (!name) return
-        addExternalItem(name, category)
-        setStep(1)
-        const el = document.getElementById('order')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
-      } catch (err) {
-        console.error(err)
-      }
+    function handleOrderNow(e) {
+      const { name, category } = e.detail || {}
+      if (!name) return
+      addExternalItem(name, category)
+      setStep(1)
+      const el = document.getElementById('order')
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
     }
-    window.addEventListener('casamisu:order-now', handleExternalOrder)
-    return () => window.removeEventListener('casamisu:order-now', handleExternalOrder)
+    window.addEventListener('casamisu:order-now', handleOrderNow)
+    return () => window.removeEventListener('casamisu:order-now', handleOrderNow)
   }, [products])
 
-  // Listen for fully-configured items from the "Select Options" popup /
-  // product detail page — size, dietary preference, message, and quantity
-  // are already chosen, so this skips straight past the size-required check.
+  // Live "add to cart" from a popup on this same page (Menu.jsx) — opens the
+  // cart drawer instead of jumping the page around.
   useEffect(() => {
     function handleConfiguredItem(e) {
       try {
         const detail = e.detail || {}
         if (!detail.name) return
         addConfiguredItem(detail)
-        setStep(1)
-        const el = document.getElementById('order')
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
+        setDrawerOpen(true)
       } catch (err) {
         console.error(err)
       }
@@ -299,15 +306,19 @@ export default function OrderFlow() {
     return () => window.removeEventListener('casamisu:add-configured-item', handleConfiguredItem)
   }, [products])
 
-  // Pick up ?order=&category= from a cross-page "Order Now" link (e.g. from /menu)
+  // "add to cart" that arrived via a full page navigation (from /menu or the
+  // product detail page, where this component doesn't exist to catch a live
+  // event) — see src/utils/cartBridge.js.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const name = params.get('order')
-    if (!name) return
-    addExternalItem(name, params.get('category'))
-    setStep(1)
-    const el = document.getElementById('order')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+    const pending = sessionStorage.getItem(PENDING_ITEM_KEY)
+    if (!pending) return
+    sessionStorage.removeItem(PENDING_ITEM_KEY)
+    try {
+      addConfiguredItem(JSON.parse(pending))
+      setDrawerOpen(true)
+    } catch (err) {
+      console.error(err)
+    }
   }, [products])
 
   function addExternalItem(name, category) {
@@ -332,9 +343,9 @@ export default function OrderFlow() {
   }
 
   // From the "Select Options" popup / product detail page — size, price,
-  // dietary preference, message, and quantity have already been chosen.
+  // dietary preference, message, image, and quantity have already been chosen.
   function addConfiguredItem(detail) {
-    const { name, category, size, price, quantity, dietaryPreference, message } = detail
+    const { name, category, size, price, quantity, dietaryPreference, message, image } = detail
     const match = products.find((p) => p.name.toLowerCase() === name.toLowerCase())
     const id = match ? match.id : `ext-${slugify(name)}`
     const resolvedCategory = match ? match.category : (category || 'tiramisu')
@@ -349,12 +360,15 @@ export default function OrderFlow() {
         quantity: Math.max(quantity || 1, 1),
         dietaryPreference,
         message,
+        image: image || match?.image,
       },
     }))
   }
 
   const cartItems = Object.values(cart).filter((c) => c.quantity > 0)
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const deliveryFee = shippingMethod === 'delivery' ? DELIVERY_FEE : 0
+  const total = subtotal + deliveryFee
   const hasSelection = cartItems.length > 0
   const hasGiftingOrBulk = cartItems.some((item) => item.category === 'gifting' || item.quantity > 10)
 
@@ -382,6 +396,7 @@ export default function OrderFlow() {
           size: current?.size || null,
           price: current?.size ? current.price : 0,
           quantity: next,
+          image: current?.image || product.image,
         },
       }
     })
@@ -407,38 +422,38 @@ export default function OrderFlow() {
     setStep(2)
   }
 
-  function buildOrderMessage() {
-    const lines = cartItems.map((item) => `${item.name}${item.size ? ` (${item.size})` : ''} × ${item.quantity} (${formatCurrency(item.price * item.quantity)})`)
-    const scheduleLine = schedule.orderType === 'scheduled' && schedule.deliveryDate
-      ? ` Scheduled for ${schedule.deliveryDate}${schedule.deliveryTimeSlot ? ` (${schedule.deliveryTimeSlot})` : ''}.`
-      : ''
-    return `Hi! I'd like to order: ${lines.join(', ')}. Total: ${formatCurrency(total)}.${scheduleLine} Please confirm my order.`
+  function goToCheckoutFromDrawer() {
+    setDrawerOpen(false)
+    setStep(1)
+    const el = document.getElementById('order')
+    if (el) el.scrollIntoView({ behavior: 'smooth' })
   }
 
-  function openWhatsApp() {
-    const text = encodeURIComponent(buildOrderMessage())
-    window.open(`https://wa.me/${OWNER_PHONE}?text=${text}`, '_blank', 'noopener,noreferrer')
-  }
-
-  async function copyUpiId() {
-    try {
-      await navigator.clipboard.writeText(UPI_ID)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  async function confirmPayment() {
-    if (!transactionId.trim()) {
-      setTxnError(true)
+  // Debounced postal-code eligibility check against the backend (which
+  // proxies to OpenStreetMap — that service has no CORS support, so this
+  // can't be called directly from the browser).
+  useEffect(() => {
+    if (shippingMethod !== 'delivery' || pincode.length !== 6) {
+      setPincodeCheck({ status: 'idle', eligible: null, distanceKm: null })
       return
     }
-    setTxnError(false)
-    setSubmitting(true)
+    setPincodeCheck({ status: 'checking', eligible: null, distanceKm: null })
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/delivery/check?pincode=${pincode}`)
+        const data = await res.json()
+        setPincodeCheck({ status: 'done', eligible: !!data.eligible, distanceKm: data.distanceKm })
+      } catch (err) {
+        console.error(err)
+        setPincodeCheck({ status: 'error', eligible: null, distanceKm: null })
+      }
+    }, 600)
+    return () => clearTimeout(t)
+  }, [pincode, shippingMethod])
+
+  async function finalizeOrder(razorpayResponse) {
     try {
-      const res = await fetch('https://casa-misu-production.up.railway.app/api/orders', {
+      const res = await fetch(`${API_BASE}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -447,34 +462,118 @@ export default function OrderFlow() {
           customerEmail: form.customerEmail,
           items: JSON.stringify(cartItems),
           totalAmount: total,
-          deliveryType: form.deliveryType,
-          address: form.deliveryType === 'delivery' ? form.address : '',
+          deliveryType: shippingMethod,
+          address: shippingMethod === 'delivery' ? form.address : '',
+          deliveryFee,
+          deliveryPincode: shippingMethod === 'delivery' ? pincode : '',
           specialRequests: form.specialRequests,
           deliveryDate: schedule.orderType === 'scheduled' ? schedule.deliveryDate : '',
           deliveryTimeSlot: schedule.orderType === 'scheduled' ? schedule.deliveryTimeSlot : '',
           orderType: schedule.orderType,
-          transactionId: transactionId.trim(),
-          paymentMethod: 'UPI',
+          transactionId: razorpayResponse.razorpay_payment_id,
+          paymentMethod: 'Razorpay',
+          razorpayOrderId: razorpayResponse.razorpay_order_id,
+          razorpayPaymentId: razorpayResponse.razorpay_payment_id,
+          paymentStatus: 'verified',
         }),
       })
       const data = await res.json()
       if (data.success) {
         setCustomerName(form.customerName)
-        setStep(5)
+        setStep(3)
       } else {
-        alert('There was an error confirming your payment. Please try again.')
+        setCheckoutError(`Payment succeeded but we could not save your order. Please message us on WhatsApp with payment ID: ${razorpayResponse.razorpay_payment_id}`)
       }
     } catch (err) {
       console.error(err)
-      alert('There was an error confirming your payment. Please try again.')
+      setCheckoutError(`Payment succeeded but something went wrong saving your order. Please message us on WhatsApp with payment ID: ${razorpayResponse.razorpay_payment_id}`)
     } finally {
       setSubmitting(false)
     }
   }
 
-  function goToPayment(e) {
-    e.preventDefault()
-    setStep(4)
+  async function handlePayAndPlaceOrder() {
+    if (!form.customerName.trim() || !form.customerPhone.trim()) {
+      setCheckoutError('Please fill in your name and phone number')
+      return
+    }
+    if (shippingMethod === 'delivery') {
+      if (pincodeCheck.eligible !== true) {
+        setCheckoutError('Please enter a postal code eligible for delivery, or switch to store pickup')
+        return
+      }
+      if (!form.address.trim()) {
+        setCheckoutError('Please enter your delivery address')
+        return
+      }
+    }
+    if (schedule.orderType === 'scheduled' && (!schedule.deliveryDate || !schedule.deliveryTimeSlot)) {
+      setCheckoutError('Please choose a date and time slot')
+      return
+    }
+
+    setCheckoutError('')
+    setSubmitting(true)
+
+    try {
+      const scriptLoaded = await loadRazorpayScript()
+      if (!scriptLoaded) {
+        setCheckoutError('Could not load the payment gateway. Please check your connection and try again.')
+        setSubmitting(false)
+        return
+      }
+
+      const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: total }),
+      })
+
+      if (orderRes.status === 503) {
+        setCheckoutError("Online payment isn't set up yet — please message us on WhatsApp to complete your order.")
+        setSubmitting(false)
+        return
+      }
+
+      const orderData = await orderRes.json()
+      if (!orderData.orderId) {
+        setCheckoutError('Could not start payment. Please try again.')
+        setSubmitting(false)
+        return
+      }
+
+      const rzp = new window.Razorpay({
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.orderId,
+        name: 'Casa Misu',
+        description: 'Dessert order',
+        handler: function (response) {
+          finalizeOrder(response)
+        },
+        prefill: {
+          name: form.customerName,
+          contact: form.customerPhone,
+          email: form.customerEmail,
+        },
+        theme: { color: NAVY },
+        modal: {
+          ondismiss: function () {
+            setSubmitting(false)
+          },
+        },
+      })
+      rzp.on('payment.failed', function () {
+        setCheckoutError('Payment failed. Please try again.')
+        setSubmitting(false)
+      })
+      rzp.open()
+    } catch (err) {
+      console.error(err)
+      setCheckoutError('Something went wrong starting payment. Please try again.')
+      setSubmitting(false)
+    }
   }
 
   function goHome() {
@@ -485,15 +584,15 @@ export default function OrderFlow() {
       customerName: '',
       customerPhone: '',
       customerEmail: '',
-      deliveryType: 'pickup',
       address: '',
       specialRequests: '',
     })
     setSchedule({ orderType: 'asap', deliveryDate: '', deliveryTimeSlot: '' })
-    setTransactionId('')
+    setShippingMethod('pickup')
+    setPincode('')
+    setPincodeCheck({ status: 'idle', eligible: null, distanceKm: null })
     setSizeError(false)
-    setTxnError(false)
-    setCopied(false)
+    setCheckoutError('')
   }
 
   return (
@@ -575,8 +674,8 @@ export default function OrderFlow() {
                   )
                 })}
                 <div style={styles.cartTotal}>
-                  <span>Total</span>
-                  <span style={{ color: RUST, fontWeight: 700 }}>{formatCurrency(total)}</span>
+                  <span>Subtotal</span>
+                  <span style={{ color: RUST, fontWeight: 700 }}>{formatCurrency(subtotal)}</span>
                 </div>
               </div>
             )}
@@ -599,44 +698,13 @@ export default function OrderFlow() {
           </div>
         )}
 
-        {/* STEP 2 */}
+        {/* STEP 2 — CHECKOUT */}
         {step === 2 && (
           <div style={styles.stepBox} className="order-step-enter">
-            <h2 style={styles.stepTitle}>How would you like to place your order?</h2>
-
-            <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
-
-            <div style={{ ...styles.methodGrid, gridTemplateColumns: '1fr' }}>
-              <div style={styles.methodCard}>
-                <div style={{ ...styles.methodIcon, background: CREAM, border: `2px solid ${NAVY}` }}>
-                  <img src={logo} alt="" style={{ width: 40, height: 'auto' }} />
-                </div>
-                <h3 style={styles.methodTitle}>Place Order Online</h3>
-                <p style={styles.methodDesc}>Fill in your details and pay via UPI to confirm</p>
-                <button
-                  type="button"
-                  style={styles.btnPrimary}
-                  onClick={() => setStep(3)}
-                >
-                  Fill Order Form
-                </button>
-              </div>
-            </div>
-
-            <div style={styles.summaryBox}>
-              <CartSummary cart={cart} total={total} />
-            </div>
-
-            <button type="button" style={styles.btnBack} onClick={() => setStep(1)}>← Back</button>
-          </div>
-        )}
-
-        {/* STEP 3 */}
-        {step === 3 && (
-          <div style={styles.stepBox} className="order-step-enter">
-            <h2 style={styles.stepTitle}>Almost done! Tell us about yourself</h2>
-            <div style={styles.detailsLayout} className="order-details-layout">
-              <form onSubmit={goToPayment} style={styles.formCol}>
+            <h2 style={styles.stepTitle}>Checkout</h2>
+            <div style={styles.checkoutLayout} className="order-details-layout">
+              <div style={styles.formCol}>
+                <h4 style={styles.sectionTitle}>Contact</h4>
                 <label style={styles.label}>
                   Full Name *
                   <input required value={form.customerName} onChange={(e) => setForm({ ...form, customerName: e.target.value })} style={styles.input} placeholder="Your full name" />
@@ -650,108 +718,115 @@ export default function OrderFlow() {
                   <input type="email" value={form.customerEmail} onChange={(e) => setForm({ ...form, customerEmail: e.target.value })} style={styles.input} placeholder="you@email.com" />
                 </label>
 
-                <div style={styles.label}>
-                  Delivery Address or Pickup?
-                  <div style={styles.toggleRow}>
-                    <button
-                      type="button"
-                      style={{ ...styles.toggleBtn, ...(form.deliveryType === 'pickup' ? styles.toggleActive : {}) }}
-                      onClick={() => setForm({ ...form, deliveryType: 'pickup', address: '' })}
-                    >
-                      Pickup
-                    </button>
-                    <button
-                      type="button"
-                      style={{ ...styles.toggleBtn, ...(form.deliveryType === 'delivery' ? styles.toggleActive : {}) }}
-                      onClick={() => setForm({ ...form, deliveryType: 'delivery' })}
-                    >
-                      Delivery
-                    </button>
-                  </div>
+                <h4 style={styles.sectionTitle}>Shipping Method</h4>
+                <div style={styles.shippingOptions}>
+                  <button
+                    type="button"
+                    style={{ ...styles.shippingCard, ...(shippingMethod === 'pickup' ? styles.shippingCardActive : {}) }}
+                    onClick={() => setShippingMethod('pickup')}
+                  >
+                    <span style={styles.shippingCardTitle}>Store Pickup</span>
+                    <span style={styles.shippingCardFee}>Free</span>
+                  </button>
+                  <button
+                    type="button"
+                    style={{ ...styles.shippingCard, ...(shippingMethod === 'delivery' ? styles.shippingCardActive : {}) }}
+                    onClick={() => setShippingMethod('delivery')}
+                  >
+                    <span style={styles.shippingCardTitle}>Local Delivery</span>
+                    <span style={styles.shippingCardFee}>₹{DELIVERY_FEE}</span>
+                  </button>
                 </div>
 
-                {form.deliveryType === 'delivery' && (
-                  <label style={styles.label}>
-                    Address *
-                    <textarea required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} style={{ ...styles.input, minHeight: 80 }} placeholder="Your delivery address" />
-                  </label>
+                {shippingMethod === 'pickup' && (
+                  <p style={styles.pickupNote}>📍 Pick up from: {STORE_ADDRESS}</p>
                 )}
+
+                {shippingMethod === 'delivery' && (
+                  <>
+                    <label style={styles.label}>
+                      Enter your postal code to check if you are eligible for local delivery:
+                      <input
+                        value={pincode}
+                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        style={styles.input}
+                        placeholder="e.g. 400097"
+                        inputMode="numeric"
+                        maxLength={6}
+                      />
+                    </label>
+                    {pincodeCheck.status === 'checking' && (
+                      <p style={styles.pincodeHint}>Checking…</p>
+                    )}
+                    {pincodeCheck.status === 'done' && pincodeCheck.eligible && (
+                      <p style={styles.pincodeEligible}>✓ Delivery available to this area ({pincodeCheck.distanceKm} km away)</p>
+                    )}
+                    {pincodeCheck.status === 'done' && !pincodeCheck.eligible && (
+                      <p style={styles.pincodeIneligible}>Not eligible for delivery — please pick up from store instead</p>
+                    )}
+                    {pincodeCheck.status === 'error' && (
+                      <p style={styles.pincodeIneligible}>Could not check this postal code right now. Please try again.</p>
+                    )}
+
+                    {pincodeCheck.eligible && (
+                      <label style={styles.label}>
+                        Delivery Address *
+                        <textarea
+                          required
+                          value={form.address}
+                          onChange={(e) => setForm({ ...form, address: e.target.value })}
+                          style={{ ...styles.input, minHeight: 80 }}
+                          placeholder="Flat/House no., street, landmark"
+                        />
+                      </label>
+                    )}
+                  </>
+                )}
+
+                <h4 style={styles.sectionTitle}>{shippingMethod === 'delivery' ? 'Delivery' : 'Pickup'} Date &amp; Time</h4>
+                <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
 
                 <label style={styles.label}>
                   Special Requests (optional)
-                  <textarea value={form.specialRequests} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} style={{ ...styles.input, minHeight: 70 }} placeholder="Any allergies, preferences, or notes…" />
+                  <textarea value={form.specialRequests} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} style={{ ...styles.input, minHeight: 60 }} placeholder="Any allergies, preferences, or notes…" />
                 </label>
 
-                <button type="submit" style={{ ...styles.btnPrimary, width: '100%' }}>
-                  Continue to Payment
+                {checkoutError && <p style={styles.errorText}>{checkoutError}</p>}
+
+                <button
+                  type="button"
+                  style={{ ...styles.btnPrimary, width: '100%' }}
+                  disabled={submitting}
+                  onClick={handlePayAndPlaceOrder}
+                >
+                  {submitting ? 'Processing…' : `Pay ${formatCurrency(total)}`}
                 </button>
-              </form>
+              </div>
 
               <div style={styles.summaryCol}>
                 <h4 style={{ margin: '0 0 12px', color: NAVY }}>Order Summary</h4>
-                <CartSummary cart={cart} total={total} />
+                <CartSummary cart={cart} total={subtotal} hideTotal />
+                <div style={styles.cartRow}>
+                  <span>Subtotal</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+                <div style={styles.cartRow}>
+                  <span>Delivery Fee</span>
+                  <span>{shippingMethod === 'delivery' ? formatCurrency(DELIVERY_FEE) : 'Free'}</span>
+                </div>
+                <div style={styles.cartTotal}>
+                  <span>Total</span>
+                  <span style={{ color: RUST, fontWeight: 700 }}>{formatCurrency(total)}</span>
+                </div>
               </div>
             </div>
 
-            <button type="button" style={styles.btnBack} onClick={() => setStep(2)}>← Back</button>
+            <button type="button" style={styles.btnBack} onClick={() => setStep(1)}>← Back</button>
           </div>
         )}
 
-        {/* STEP 4 — PAYMENT */}
-        {step === 4 && (
-          <div style={styles.stepBox} className="order-step-enter">
-            <h2 style={styles.stepTitle}>Complete Your Payment</h2>
-            <p style={styles.paymentSubtitle}>Pay via UPI to confirm your order</p>
-
-            <div style={styles.paymentBox}>
-              <p style={styles.paymentAmount}>Pay {formatCurrency(total)}</p>
-
-              <div style={styles.upiRow}>
-                <span style={styles.upiId}>UPI ID: {UPI_ID}</span>
-                <button type="button" style={styles.copyBtn} onClick={copyUpiId}>
-                  {copied ? 'Copied!' : 'Copy UPI ID'}
-                </button>
-              </div>
-
-              <div style={styles.orDivider}>— OR —</div>
-
-              <div style={styles.qrBox}>
-                <img
-                  src={`${import.meta.env.BASE_URL}upi-qr.jpg`}
-                  alt="Scan to pay via UPI"
-                  style={styles.qrImage}
-                />
-              </div>
-              <p style={styles.qrCaption}>Scan QR to Pay</p>
-
-              <label style={{ ...styles.label, marginTop: 16 }}>
-                Transaction ID / UTR *
-                <input
-                  required
-                  value={transactionId}
-                  onChange={(e) => { setTransactionId(e.target.value); setTxnError(false) }}
-                  style={styles.input}
-                  placeholder="Enter after completing payment"
-                />
-              </label>
-              {txnError && <p style={styles.errorText}>Transaction ID is required</p>}
-
-              <button
-                type="button"
-                style={{ ...styles.btnPrimary, width: '100%', marginTop: 12 }}
-                disabled={submitting}
-                onClick={confirmPayment}
-              >
-                {submitting ? 'Confirming…' : 'Confirm Payment'}
-              </button>
-            </div>
-
-            <button type="button" style={styles.btnBack} onClick={() => setStep(3)}>← Back</button>
-          </div>
-        )}
-
-        {/* STEP 5 */}
-        {step === 5 && (
+        {/* STEP 3 */}
+        {step === 3 && (
           <div style={{ ...styles.stepBox, textAlign: 'center' }} className="order-step-enter order-confirmed">
             <div style={styles.checkmark} className="order-checkmark">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -775,6 +850,14 @@ export default function OrderFlow() {
           </div>
         )}
       </div>
+
+      <CartDrawer
+        cart={cart}
+        total={subtotal}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onCheckout={goToCheckoutFromDrawer}
+      />
     </section>
   )
 }
@@ -982,6 +1065,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: 14,
+    padding: '4px 0',
   },
   cartRowNote: {
     margin: '2px 0 0',
@@ -1036,11 +1120,6 @@ const styles = {
     padding: 16,
     marginBottom: 20,
   },
-  scheduleLabel: {
-    margin: '0 0 10px',
-    color: NAVY,
-    fontSize: 15,
-  },
   scheduleToggleRow: {
     display: 'flex',
     gap: 8,
@@ -1081,41 +1160,7 @@ const styles = {
     marginTop: 16,
     padding: 0,
   },
-  methodGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: 16,
-    marginBottom: 20,
-  },
-  methodCard: {
-    background: '#fff',
-    border: `2px solid ${NAVY}`,
-    borderRadius: 10,
-    padding: 20,
-    textAlign: 'center',
-  },
-  methodIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 auto 14px',
-  },
-  methodTitle: {
-    color: NAVY,
-    fontSize: 16,
-    fontWeight: 700,
-    margin: '0 0 8px',
-  },
-  methodDesc: {
-    color: '#555',
-    fontSize: 14,
-    margin: '0 0 16px',
-    lineHeight: 1.5,
-  },
-  detailsLayout: {
+  checkoutLayout: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: 20,
@@ -1124,6 +1169,69 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
+  },
+  sectionTitle: {
+    color: NAVY,
+    fontSize: 15,
+    fontWeight: 700,
+    margin: '10px 0 0',
+    paddingBottom: 6,
+    borderBottom: `1px solid ${NAVY}`,
+  },
+  shippingOptions: {
+    display: 'flex',
+    gap: 10,
+  },
+  shippingCard: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    padding: '12px 10px',
+    borderRadius: 10,
+    border: `2px solid ${NAVY}`,
+    background: '#fff',
+    color: NAVY,
+    fontFamily: 'Georgia, serif',
+    cursor: 'pointer',
+  },
+  shippingCardActive: {
+    background: NAVY,
+    color: '#fff',
+  },
+  shippingCardTitle: {
+    fontWeight: 700,
+    fontSize: 13,
+  },
+  shippingCardFee: {
+    fontSize: 12,
+  },
+  pickupNote: {
+    background: '#fff',
+    border: `1px solid ${NAVY}`,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 13,
+    color: NAVY,
+    margin: 0,
+  },
+  pincodeHint: {
+    fontSize: 12,
+    color: '#666',
+    margin: 0,
+  },
+  pincodeEligible: {
+    fontSize: 13,
+    color: '#2e7d32',
+    fontWeight: 600,
+    margin: 0,
+  },
+  pincodeIneligible: {
+    fontSize: 13,
+    color: '#c0392b',
+    fontWeight: 600,
+    margin: 0,
   },
   summaryCol: {
     background: '#fff',
@@ -1167,79 +1275,6 @@ const styles = {
   toggleActive: {
     background: NAVY,
     color: '#fff',
-  },
-  paymentSubtitle: {
-    textAlign: 'center',
-    color: '#555',
-    margin: '-12px 0 20px',
-    fontSize: 14,
-  },
-  paymentBox: {
-    background: '#fff',
-    border: `2px solid ${NAVY}`,
-    borderRadius: 10,
-    padding: 24,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  paymentAmount: {
-    fontSize: 24,
-    fontWeight: 700,
-    color: NAVY,
-    margin: '0 0 16px',
-  },
-  upiRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    flexWrap: 'wrap',
-    marginBottom: 12,
-  },
-  upiId: {
-    fontSize: 14,
-    color: '#444',
-  },
-  copyBtn: {
-    background: 'transparent',
-    border: `1.5px solid ${NAVY}`,
-    color: NAVY,
-    borderRadius: 999,
-    padding: '6px 14px',
-    fontFamily: 'Georgia, serif',
-    fontSize: 12,
-    cursor: 'pointer',
-  },
-  orDivider: {
-    color: '#999',
-    fontSize: 12,
-    letterSpacing: '0.1em',
-    margin: '8px 0',
-  },
-  qrBox: {
-    width: 200,
-    height: 200,
-    border: `1.5px solid ${NAVY}`,
-    borderRadius: 8,
-    margin: '4px auto 0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    padding: 8,
-    boxSizing: 'border-box',
-  },
-  qrImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain',
-  },
-  qrCaption: {
-    color: NAVY,
-    fontFamily: 'Georgia, serif',
-    fontSize: 13,
-    textAlign: 'center',
-    margin: '8px 0 0',
   },
   checkmark: {
     margin: '0 auto 16px',

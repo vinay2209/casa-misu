@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 // POST /api/orders
 router.post('/', async (req, res) => {
   try {
-    const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount, deliveryType, address, deliveryDate, deliveryTimeSlot, orderType, transactionId, paymentMethod } = req.body;
+    const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount, deliveryType, address, deliveryDate, deliveryTimeSlot, orderType, transactionId, paymentMethod, deliveryFee, deliveryPincode, razorpayOrderId, razorpayPaymentId, paymentStatus } = req.body;
     const order = new Order({
       customerName,
       customerPhone,
@@ -35,6 +35,11 @@ router.post('/', async (req, res) => {
       orderType,
       transactionId,
       paymentMethod,
+      deliveryFee,
+      deliveryPincode,
+      razorpayOrderId,
+      razorpayPaymentId,
+      paymentStatus,
     });
     const saved = await order.save();
 
@@ -46,7 +51,7 @@ router.post('/', async (req, res) => {
       from: process.env.GMAIL_USER,
       to: process.env.OWNER_EMAIL,
       subject: `New Casa Misu Order from ${customerName}`,
-      text: `Name: ${customerName}\nPhone: ${customerPhone}\nEmail: ${customerEmail || 'N/A'}\nItems: ${items}\nQuantity: ${quantity || 'N/A'}\nDelivery: ${deliveryType || 'pickup'}${address ? `\nAddress: ${address}` : ''}\n${scheduleText}\nTotal: ₹${totalAmount || 'N/A'}\nPayment Method: ${paymentMethod || 'UPI'}\nTransaction ID: ${transactionId || 'N/A'}\nSpecial Requests: ${specialRequests || 'None'}`
+      text: `Name: ${customerName}\nPhone: ${customerPhone}\nEmail: ${customerEmail || 'N/A'}\nItems: ${items}\nQuantity: ${quantity || 'N/A'}\nDelivery: ${deliveryType || 'pickup'}${address ? `\nAddress: ${address}` : ''}${deliveryFee ? `\nDelivery Fee: ₹${deliveryFee}` : ''}\n${scheduleText}\nTotal: ₹${totalAmount || 'N/A'}\nPayment Method: ${paymentMethod || 'UPI'}\nTransaction ID: ${transactionId || 'N/A'}\nSpecial Requests: ${specialRequests || 'None'}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {

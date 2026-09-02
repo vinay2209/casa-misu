@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './ProductDetailPage.css'
 import ProductOptionsForm from '../components/ProductOptionsForm'
 import { getProductDetails } from '../constants/productDetails'
+import { addItemToOrder } from '../utils/cartBridge'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
@@ -23,7 +24,7 @@ export default function ProductDetailPage() {
   const [image, setImage] = useState(params.get('image') || null)
 
   useEffect(() => {
-    fetch('https://casa-misu-production.up.railway.app/api/menu')
+    fetch('https://casa-misu.onrender.com/api/menu')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -39,8 +40,7 @@ export default function ProductDetailPage() {
   const menuUrl = `${homeUrl}#menu`
 
   function handleAdd(configuredItem) {
-    window.dispatchEvent(new CustomEvent('casamisu:add-configured-item', { detail: configuredItem }))
-    window.location.href = `${homeUrl}#order`
+    addItemToOrder({ ...configuredItem, image })
   }
 
   return (

@@ -11,6 +11,8 @@ const menuRouter = require('./routes/menu');
 const adminRouter = require('./routes/admin');
 const galleryRouter = require('./routes/gallery');
 const uploadRouter = require('./routes/upload');
+const deliveryRouter = require('./routes/delivery');
+const paymentRouter = require('./routes/payment');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,7 +22,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(cors({ origin: ['http://localhost:5173', 'https://vinay2209.github.io'] }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'https://vinay2209.github.io'] }));
 app.use(express.json());
 
 app.use('/api/orders', ordersRouter);
@@ -28,6 +30,8 @@ app.use('/api/menu', menuRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/gallery', galleryRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/delivery', deliveryRouter);
+app.use('/api/payment', paymentRouter);
 
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
