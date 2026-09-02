@@ -13,7 +13,7 @@ export default function HeroSection() {
       <div className="hero-stripes">
         <nav className="hero-nav">
           <div className="hero-nav-links hero-nav-left">
-            {['Home', 'Menu', 'About Us', 'Gallery'].map((l) => {
+            {['Home', 'Menu', 'About Us'].map((l) => {
               // Insert dropdown markup only for Menu link
               if (l === 'Menu') {
                 return (

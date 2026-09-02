@@ -320,7 +320,7 @@ export default function AdminDashboard(){
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
                 <thead>
                   <tr style={{ textAlign:'left', borderBottom:'1px solid #ddd' }}>
-                    <th>Name</th><th>Phone</th><th>Items+Size</th><th>Scheduled Date</th><th>Time Slot</th><th>Amount</th><th>Transaction ID</th><th>Payment Status</th><th>Order Status</th><th>Actions</th>
+                    <th>Name</th><th>Phone</th><th>Items+Size</th><th>Delivery</th><th>Special Requests</th><th>Scheduled Date</th><th>Time Slot</th><th>Amount</th><th>Transaction ID</th><th>Payment Status</th><th>Order Status</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -329,6 +329,19 @@ export default function AdminDashboard(){
                       <td>{o.customerName}</td>
                       <td>{o.customerPhone}</td>
                       <td style={{ maxWidth:220 }}>{formatItemsWithSize(o.items)}</td>
+                      <td style={{ maxWidth:200 }}>
+                        {o.deliveryType === 'delivery' ? (
+                          <>
+                            <span style={{ background:'#8B3A2A', color:'#fff', padding:'3px 10px', borderRadius:999, fontSize:11, whiteSpace:'nowrap' }}>
+                              Delivery{o.deliveryFee ? ` (₹${o.deliveryFee})` : ''}
+                            </span>
+                            {o.address && <div style={{ fontSize:11, color:'#555', marginTop:4 }}>{o.address}{o.deliveryPincode ? ` — ${o.deliveryPincode}` : ''}</div>}
+                          </>
+                        ) : (
+                          <span style={{ background:'#1B2E70', color:'#fff', padding:'3px 10px', borderRadius:999, fontSize:11, whiteSpace:'nowrap' }}>Pickup</span>
+                        )}
+                      </td>
+                      <td style={{ maxWidth:180, fontSize:12, color:'#555' }}>{o.specialRequests || '-'}</td>
                       <td>{o.orderType === 'scheduled' ? formatScheduledDate(o.deliveryDate) : '-'}</td>
                       <td>
                         {o.orderType === 'scheduled' && o.deliveryTimeSlot ? (
@@ -370,7 +383,6 @@ export default function AdminDashboard(){
                   <option value="tiramisu">Tiramisu</option>
                   <option value="cookies">Cookies</option>
                   <option value="desserts">Desserts</option>
-                  <option value="gifting">Gifting</option>
                 </select>
                 <input name="description" placeholder="Description" style={{ padding:6 }} />
                 <input name="price" type="number" placeholder="Price" required style={{ padding:6 }} />

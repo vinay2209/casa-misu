@@ -32,8 +32,10 @@ export default function App() {
       <div className="site-page">
         <AnnouncementBar />
         <HeroSection />
-        <CheckoutPage />
-        <Footer />
+        <div className="site-body">
+          <CheckoutPage />
+          <Footer />
+        </div>
         <CartDrawer />
       </div>
     )
@@ -44,8 +46,10 @@ export default function App() {
       <div className="site-page">
         <AnnouncementBar />
         <HeroSection />
-        <ProductDetailPage />
-        <Footer />
+        <div className="site-body">
+          <ProductDetailPage />
+          <Footer />
+        </div>
         <CartDrawer />
       </div>
     )
@@ -56,8 +60,10 @@ export default function App() {
       <div className="site-page">
         <AnnouncementBar />
         <HeroSection />
-        <MenuPage />
-        <Footer />
+        <div className="site-body">
+          <MenuPage />
+          <Footer />
+        </div>
         <CartDrawer />
       </div>
     )
