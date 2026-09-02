@@ -1,8 +1,6 @@
 import './App.css'
 import AnnouncementBar from './components/AnnouncementBar'
 import HeroSection from './components/HeroSection'
-import Gallery from './components/Gallery'
-import FeaturedDesserts from './components/FeaturedDesserts'
 import Menu from './components/Menu'
 import ReserveOrder from './components/ReserveOrder'
 import OrderFlow from './components/OrderFlow'
@@ -41,8 +39,6 @@ export default function App() {
       <AnnouncementBar />
       <HeroSection />
       <div className="site-body">
-        <Gallery />
-        <FeaturedDesserts />
         <Menu />
         <OrderFlow />
         <FAQ />

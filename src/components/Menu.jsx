@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './Menu.css'
 import './OrderButtons.css'
 import SectionHeading from './SectionHeading'
@@ -6,16 +7,52 @@ import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
 import giftIcon from '../assets/gift-maroon.svg'
 
-const categories = [
-  { title: 'TIRAMISU', desc: 'Classic, Pistachio, Seasonal & more.', icon: tiramisuIcon },
-  { title: 'COOKIES', desc: 'Soft, chewy & baked to perfection.', icon: cookieIcon },
-  { title: 'DESSERTS', desc: 'Delightful treats to brighten your day.', icon: cakeIcon },
-  { title: 'GIFTING', desc: 'Perfect for every special occasion.', icon: giftIcon },
+const CATEGORY_ICONS = {
+  tiramisu: tiramisuIcon,
+  cookies: cookieIcon,
+  desserts: cakeIcon,
+  gifting: giftIcon,
+}
+
+const DEFAULT_PRODUCTS = [
+  { id: 'default-1', name: 'Classic Tiramisu', price: 350, image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&q=80', category: 'tiramisu' },
+  { id: 'default-2', name: 'Pistachio Tiramisu', price: 420, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400&q=80', category: 'tiramisu' },
+  { id: 'default-3', name: 'Strawberry Tiramisu', price: 400, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80', category: 'tiramisu' },
+  { id: 'default-4', name: 'Seasonal Tiramisu', price: 380, image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&q=80', category: 'tiramisu' },
+  { id: 'default-5', name: 'Cookies Box', price: 250, image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&q=80', category: 'cookies' },
+  { id: 'default-6', name: 'Gifting Box', price: 600, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80', category: 'gifting' },
 ]
 
+function orderNow(name, category) {
+  window.dispatchEvent(new CustomEvent('casamisu:order-now', { detail: { name, category } }))
+}
+
 export default function Menu() {
+  const [products, setProducts] = useState(DEFAULT_PRODUCTS)
+
+  useEffect(() => {
+    // Pull the real, admin-managed menu; fall back to the demo list only
+    // if the backend has nothing yet, so the section is never empty.
+    fetch('https://casa-misu-production.up.railway.app/api/menu')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts(
+            data.map((item) => ({
+              id: item._id,
+              name: item.name,
+              price: item.price,
+              image: item.image,
+              category: item.category,
+            }))
+          )
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [])
+
   return (
-    <section id="about" className="menu-section">
+    <section id="menu" className="menu-section">
       <div className="menu-bg-deco" aria-hidden="true">
         <svg className="menu-bg-sketch menu-bg-left" viewBox="0 0 120 120" fill="none">
           <path d="M20 100 Q60 20 100 100" stroke="#8B3A2A" strokeWidth="0.8" fill="none" opacity="0.25"/>
@@ -30,24 +67,26 @@ export default function Menu() {
 
       <SectionHeading title="OUR MENU" subtitle="Something sweet for every craving" />
 
-      <div className="menu-grid">
-        {categories.map((c) => (
-          <article key={c.title} className="menu-card">
-            <div className="menu-card-arch">
-              <img src={c.icon} alt="" className="menu-card-icon"/>
-            </div>
-            <div className="menu-card-body">
-              <h3>{c.title}</h3>
-              <p>{c.desc}</p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                <button
-                  type="button"
-                  className="btn-order-now"
-                  onClick={() => window.dispatchEvent(new CustomEvent('casamisu:order-now', { detail: { name: c.title, category: c.title.toLowerCase() } }))}
-                >
-                  ORDER NOW
-                </button>
+      <div className="menu-product-grid">
+        {products.map((p) => (
+          <article key={p.id} className="menu-product-card">
+            {p.image ? (
+              <div className="menu-product-img" style={{ backgroundImage: `url(${p.image})` }} />
+            ) : (
+              <div className="menu-product-img menu-product-img-placeholder">
+                <img src={CATEGORY_ICONS[p.category] || cakeIcon} alt="" />
               </div>
+            )}
+            <div className="menu-product-body">
+              <h3>{p.name}</h3>
+              <p className="menu-product-price">₹{p.price}</p>
+              <button
+                type="button"
+                className="btn-order-now"
+                onClick={() => orderNow(p.name, p.category)}
+              >
+                ORDER NOW
+              </button>
             </div>
           </article>
         ))}
