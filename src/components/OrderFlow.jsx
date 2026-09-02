@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import logo from '../assets/logo.png'
+import { SIZE_OPTIONS } from '../constants/sizeOptions'
 
 const NAVY = '#1B2E70'
 const CREAM = '#FAF6EE'
@@ -16,29 +17,6 @@ const DEFAULT_PRODUCTS = [
   { id: 'default-5', name: 'Cookies Box', price: 250, image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&q=80', category: 'cookies' },
   { id: 'default-6', name: 'Gifting Box', price: 600, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80', category: 'gifting' },
 ]
-
-const SIZE_OPTIONS = {
-  tiramisu: [
-    { label: 'Small (2-3 servings)', price: 350 },
-    { label: 'Medium (4-6 servings)', price: 600 },
-    { label: 'Large (8-10 servings)', price: 950 },
-  ],
-  cookies: [
-    { label: 'Box of 6', price: 250 },
-    { label: 'Box of 12', price: 450 },
-    { label: 'Box of 24', price: 850 },
-  ],
-  desserts: [
-    { label: 'Single serving', price: 180 },
-    { label: 'Pack of 2', price: 320 },
-    { label: 'Pack of 4', price: 580 },
-  ],
-  gifting: [
-    { label: 'Small Gift Box', price: 600 },
-    { label: 'Medium Gift Box', price: 950 },
-    { label: 'Premium Gift Box', price: 1500 },
-  ],
-}
 
 function formatCurrency(amount) {
   return `₹${amount}`
@@ -111,9 +89,17 @@ function CartSummary({ cart, total }) {
   return (
     <div>
       {items.map((item) => (
-        <div key={item.id} style={styles.cartRow}>
-          <span>{item.name}{item.size ? ` (${item.size})` : ''} × {item.quantity}</span>
-          <span style={{ color: RUST, fontWeight: 600 }}>{formatCurrency(item.price * item.quantity)}</span>
+        <div key={item.id} style={styles.cartRowWrap}>
+          <div style={styles.cartRow}>
+            <span>{item.name}{item.size ? ` (${item.size})` : ''} × {item.quantity}</span>
+            <span style={{ color: RUST, fontWeight: 600 }}>{formatCurrency(item.price * item.quantity)}</span>
+          </div>
+          {(item.dietaryPreference || item.message) && (
+            <p style={styles.cartRowNote}>
+              {item.dietaryPreference}{item.dietaryPreference && item.message ? ' · ' : ''}
+              {item.message && `"${item.message}"`}
+            </p>
+          )}
         </div>
       ))}
       <div style={styles.cartTotal}>
@@ -293,6 +279,26 @@ export default function OrderFlow() {
     return () => window.removeEventListener('casamisu:order-now', handleExternalOrder)
   }, [products])
 
+  // Listen for fully-configured items from the "Select Options" popup /
+  // product detail page — size, dietary preference, message, and quantity
+  // are already chosen, so this skips straight past the size-required check.
+  useEffect(() => {
+    function handleConfiguredItem(e) {
+      try {
+        const detail = e.detail || {}
+        if (!detail.name) return
+        addConfiguredItem(detail)
+        setStep(1)
+        const el = document.getElementById('order')
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    window.addEventListener('casamisu:add-configured-item', handleConfiguredItem)
+    return () => window.removeEventListener('casamisu:add-configured-item', handleConfiguredItem)
+  }, [products])
+
   // Pick up ?order=&category= from a cross-page "Order Now" link (e.g. from /menu)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -313,6 +319,7 @@ export default function OrderFlow() {
       return {
         ...prev,
         [id]: {
+          ...existing,
           id,
           name: match ? match.name : name,
           category: resolvedCategory,
@@ -322,6 +329,28 @@ export default function OrderFlow() {
         },
       }
     })
+  }
+
+  // From the "Select Options" popup / product detail page — size, price,
+  // dietary preference, message, and quantity have already been chosen.
+  function addConfiguredItem(detail) {
+    const { name, category, size, price, quantity, dietaryPreference, message } = detail
+    const match = products.find((p) => p.name.toLowerCase() === name.toLowerCase())
+    const id = match ? match.id : `ext-${slugify(name)}`
+    const resolvedCategory = match ? match.category : (category || 'tiramisu')
+    setCart((prev) => ({
+      ...prev,
+      [id]: {
+        id,
+        name: match ? match.name : name,
+        category: resolvedCategory,
+        size,
+        price,
+        quantity: Math.max(quantity || 1, 1),
+        dietaryPreference,
+        message,
+      },
+    }))
   }
 
   const cartItems = Object.values(cart).filter((c) => c.quantity > 0)
@@ -346,6 +375,7 @@ export default function OrderFlow() {
       return {
         ...prev,
         [product.id]: {
+          ...current,
           id: product.id,
           name: product.name,
           category: product.category,
@@ -518,6 +548,12 @@ export default function OrderFlow() {
                           {item.size ? formatCurrency(item.price * item.quantity) : 'Select size'}
                         </span>
                       </div>
+                      {(item.dietaryPreference || item.message) && (
+                        <p style={styles.cartRowNote}>
+                          {item.dietaryPreference}{item.dietaryPreference && item.message ? ' · ' : ''}
+                          {item.message && `"${item.message}"`}
+                        </p>
+                      )}
                       <div style={styles.sizeRow}>
                         {sizeList.map((sz) => {
                           const isSelected = item.size === sz.label
@@ -939,11 +975,19 @@ const styles = {
     margin: '0 0 12px',
     fontWeight: 600,
   },
+  cartRowWrap: {
+    padding: '6px 0',
+  },
   cartRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '6px 0',
     fontSize: 14,
+  },
+  cartRowNote: {
+    margin: '2px 0 0',
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
   },
   cartTotal: {
     display: 'flex',

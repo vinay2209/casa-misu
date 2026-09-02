@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import '../components/FeaturedDesserts.css'
 import '../components/OrderButtons.css'
 import SectionHeading from '../components/SectionHeading'
+import ProductOptionsModal from '../components/ProductOptionsModal'
+import { minPriceForCategory } from '../constants/sizeOptions'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
@@ -28,6 +30,7 @@ const initialProducts = [
 export default function MenuPage() {
   const [category, setCategory] = useState('all')
   const [products, setProducts] = useState(initialProducts)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   useEffect(() => {
     // Pull the real, admin-managed menu; fall back to the demo list only
@@ -82,21 +85,23 @@ export default function MenuPage() {
               <h3>{p.title}</h3>
               <p className="featured-card-desc">{p.desc}</p>
               <div className="featured-card-footer">
-                <span className="featured-card-price">{p.price}</span>
+                <span className="featured-card-price">From ₹{minPriceForCategory(p.category)}</span>
                 <button
                   type="button"
                   className="btn-order-now"
-                  onClick={() => {
-                    window.location.href = `${import.meta.env.BASE_URL}?order=${encodeURIComponent(p.title)}&category=${encodeURIComponent(p.category)}#order`
-                  }}
+                  onClick={() => setSelectedProduct({ name: p.title, category: p.category, image: p.image })}
                 >
-                  ORDER NOW
+                  SELECT OPTIONS
                 </button>
               </div>
             </div>
           </article>
         ))}
       </div>
+
+      {selectedProduct && (
+        <ProductOptionsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </main>
   )
 }

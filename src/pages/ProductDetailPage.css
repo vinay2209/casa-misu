@@ -1,0 +1,5 @@
+@media (max-width: 720px) {
+  .product-detail-layout {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import './Menu.css'
 import './OrderButtons.css'
 import SectionHeading from './SectionHeading'
+import ProductOptionsModal from './ProductOptionsModal'
+import { minPriceForCategory } from '../constants/sizeOptions'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
@@ -23,12 +25,9 @@ const DEFAULT_PRODUCTS = [
   { id: 'default-6', name: 'Gifting Box', price: 600, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80', category: 'gifting' },
 ]
 
-function orderNow(name, category) {
-  window.dispatchEvent(new CustomEvent('casamisu:order-now', { detail: { name, category } }))
-}
-
 export default function Menu() {
   const [products, setProducts] = useState(DEFAULT_PRODUCTS)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   useEffect(() => {
     // Pull the real, admin-managed menu; fall back to the demo list only
@@ -79,18 +78,22 @@ export default function Menu() {
             )}
             <div className="menu-product-body">
               <h3>{p.name}</h3>
-              <p className="menu-product-price">₹{p.price}</p>
+              <p className="menu-product-price">From ₹{minPriceForCategory(p.category)}</p>
               <button
                 type="button"
                 className="btn-order-now"
-                onClick={() => orderNow(p.name, p.category)}
+                onClick={() => setSelectedProduct(p)}
               >
-                ORDER NOW
+                SELECT OPTIONS
               </button>
             </div>
           </article>
         ))}
       </div>
+
+      {selectedProduct && (
+        <ProductOptionsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      )}
     </section>
   )
 }

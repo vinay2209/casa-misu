@@ -8,6 +8,7 @@ import FAQ from './components/FAQ'
 import Footer from './components/Footer'
 import AdminDashboard from './components/AdminDashboard'
 import MenuPage from './pages/MenuPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 
 export default function App() {
   const params = typeof window !== 'undefined'
@@ -18,9 +19,21 @@ export default function App() {
     : '/'
   const isAdmin = path === '/admin' || path.startsWith('/admin')
   const isMenuPage = path === '/menu' || params.get('page') === 'menu'
+  const isProductPage = params.get('page') === 'product'
 
   if (isAdmin) {
     return <AdminDashboard />
+  }
+
+  if (isProductPage) {
+    return (
+      <div className="site-page">
+        <AnnouncementBar />
+        <HeroSection />
+        <ProductDetailPage />
+        <Footer />
+      </div>
+    )
   }
 
   if (isMenuPage) {

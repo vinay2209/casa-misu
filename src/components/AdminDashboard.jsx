@@ -121,7 +121,12 @@ export default function AdminDashboard(){
     try{
       const arr = JSON.parse(itemsJson)
       if(!Array.isArray(arr)) return itemsJson
-      return arr.map(i => `${i.name}${i.size ? ` (${i.size})` : ''} × ${i.quantity}`).join(', ')
+      return arr.map(i => {
+        let line = `${i.name}${i.size ? ` (${i.size})` : ''} × ${i.quantity}`
+        if(i.dietaryPreference) line += ` [${i.dietaryPreference}]`
+        if(i.message) line += ` — "${i.message}"`
+        return line
+      }).join(', ')
     }catch{
       return itemsJson
     }
