@@ -1,7 +1,5 @@
 .site-page {
   width: 100%;
-  max-width: var(--page-width);
-  margin: 0 auto;
   background: var(--cream);
   overflow: hidden;
 }
