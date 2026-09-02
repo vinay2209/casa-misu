@@ -1,4 +1,5 @@
 import './App.css'
+import AnnouncementBar from './components/AnnouncementBar'
 import HeroSection from './components/HeroSection'
 import Gallery from './components/Gallery'
 import FeaturedDesserts from './components/FeaturedDesserts'
@@ -27,6 +28,7 @@ export default function App() {
   if (isMenuPage) {
     return (
       <div className="site-page">
+        <AnnouncementBar />
         <HeroSection />
         <MenuPage />
         <Footer />
@@ -36,6 +38,7 @@ export default function App() {
 
   return (
     <div className="site-page">
+      <AnnouncementBar />
       <HeroSection />
       <div className="site-body">
         <Gallery />
