@@ -4,9 +4,14 @@ import { sizesForCategory } from '../constants/sizeOptions'
 const NAVY = '#1B2E70'
 
 export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add to Order' }) {
-  const sizes = sizesForCategory(product.category)
+  const sizes = Array.isArray(product.options) && product.options.length > 0
+    ? product.options
+    : sizesForCategory(product.category)
+  const dietaryOptions = Array.isArray(product.dietaryOptions) && product.dietaryOptions.length > 0
+    ? product.dietaryOptions
+    : ['Contains Egg', 'Eggless']
   const [size, setSize] = useState(sizes[0])
-  const [dietaryPreference, setDietaryPreference] = useState('Contains Egg')
+  const [dietaryPreference, setDietaryPreference] = useState(dietaryOptions[0])
   const [message, setMessage] = useState('')
   const [quantity, setQuantity] = useState(1)
 
@@ -27,28 +32,32 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
       <p style={styles.price}>₹{size.price}</p>
 
       <div style={styles.field}>
-        <span style={styles.label}>Weight: {size.label}</span>
-        <div style={styles.pillRow}>
-          {sizes.map((s) => {
-            const active = s.label === size.label
-            return (
-              <button
-                key={s.label}
-                type="button"
-                style={{ ...styles.pill, ...(active ? styles.pillActive : {}) }}
-                onClick={() => setSize(s)}
-              >
-                {s.label}
-              </button>
-            )
-          })}
-        </div>
+        <span style={styles.label}>{sizes.length === 1 ? 'Size' : `Weight: ${size.label}`}</span>
+        {sizes.length === 1 ? (
+          <span style={styles.singleOption}>{size.label}</span>
+        ) : (
+          <div style={styles.pillRow}>
+            {sizes.map((s) => {
+              const active = s.label === size.label
+              return (
+                <button
+                  key={s.label}
+                  type="button"
+                  style={{ ...styles.pill, ...(active ? styles.pillActive : {}) }}
+                  onClick={() => setSize(s)}
+                >
+                  {s.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <div style={styles.field}>
         <span style={styles.label}>Dietary Preference: {dietaryPreference}</span>
         <div style={styles.pillRow}>
-          {['Contains Egg', 'Eggless'].map((opt) => {
+          {dietaryOptions.map((opt) => {
             const active = opt === dietaryPreference
             return (
               <button
@@ -64,17 +73,19 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
         </div>
       </div>
 
-      <label style={styles.field}>
-        <span style={styles.label}>Message on the cake (optional)</span>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="e.g. Happy Birthday Riya!"
-          style={styles.input}
-          maxLength={60}
-        />
-      </label>
+      {product.messageOnCake !== false && (
+        <label style={styles.field}>
+          <span style={styles.label}>Message on the cake (optional)</span>
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="e.g. Happy Birthday Riya!"
+            style={styles.input}
+            maxLength={60}
+          />
+        </label>
+      )}
 
       <div style={styles.field}>
         <span style={styles.label}>Quantity{quantity >= 5 ? ' (max 5 per order)' : ''}</span>
@@ -143,6 +154,11 @@ const styles = {
   pillActive: {
     background: NAVY,
     color: '#fff',
+  },
+  singleOption: {
+    color: NAVY,
+    fontSize: 13,
+    fontWeight: 600,
   },
   input: {
     padding: 10,

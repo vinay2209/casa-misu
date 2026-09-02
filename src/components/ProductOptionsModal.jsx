@@ -30,7 +30,7 @@ export default function ProductOptionsModal({ product, onClose }) {
             View details
           </button>
 
-          <ProductOptionsForm product={product} onAdd={handleAdd} submitLabel="Add to Order" />
+          <ProductOptionsForm key={product._id || product.id || product.name} product={product} onAdd={handleAdd} submitLabel="Add to Order" />
         </div>
       </div>
     </div>

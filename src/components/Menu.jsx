@@ -40,6 +40,12 @@ export default function Menu() {
               price: item.price,
               image: item.image,
               category: item.category,
+              options: item.options,
+              dietaryOptions: item.dietaryOptions,
+              messageOnCake: item.messageOnCake,
+              description: item.description,
+              ingredients: item.ingredients,
+              shelfLife: item.shelfLife,
             }))
           )
         }
@@ -75,7 +81,7 @@ export default function Menu() {
             )}
             <div className="menu-product-body">
               <h3>{p.name}</h3>
-              <p className="menu-product-price">From ₹{minPriceForCategory(p.category)}</p>
+              <p className="menu-product-price">From ₹{minimumProductPrice(p)}</p>
               <button
                 type="button"
                 className="btn-order-now"
@@ -93,4 +99,11 @@ export default function Menu() {
       )}
     </section>
   )
+}
+
+function minimumProductPrice(product) {
+  if (Array.isArray(product.options) && product.options.length > 0) {
+    return Math.min(...product.options.map((option) => Number(option.price)))
+  }
+  return product.price || minPriceForCategory(product.category)
 }

@@ -20,6 +20,7 @@ export default function ProductDetailPage() {
   const name = params.get('name') || ''
   const category = params.get('category') || 'tiramisu'
   const [image, setImage] = useState(params.get('image') || null)
+  const [product, setProduct] = useState({ name, category })
 
   useEffect(() => {
     fetch('https://casa-misu.onrender.com/api/menu')
@@ -27,13 +28,20 @@ export default function ProductDetailPage() {
       .then((data) => {
         if (Array.isArray(data)) {
           const match = data.find((item) => item.name?.toLowerCase() === name.toLowerCase())
-          if (match?.image) setImage(match.image)
+          if (match) {
+            setProduct(match)
+            if (match.image) setImage(match.image)
+          }
         }
       })
       .catch((err) => console.error(err))
   }, [name])
 
   const info = getProductDetails(name, category)
+  const description = product.description || info.description
+  const ingredients = product.ingredients || info.ingredients || 'Ask us for full ingredient details.'
+  const contains = product.dietaryOptions?.length ? product.dietaryOptions.join(' | ') : info.contains
+  const shelfLife = product.shelfLife || info.bestBefore
   const homeUrl = import.meta.env.BASE_URL
   const menuUrl = `${homeUrl}#menu`
 
@@ -64,14 +72,14 @@ export default function ProductDetailPage() {
 
         <div style={styles.info}>
           <h1 style={styles.title}>{name}</h1>
-          <p style={styles.description}>{info.description}</p>
+          <p style={styles.description}>{description}</p>
 
-          <ProductOptionsForm product={{ name, category }} onAdd={handleAdd} submitLabel="Add to Order" />
+          <ProductOptionsForm key={product._id || `${product.name}-${JSON.stringify(product.options || [])}`} product={product} onAdd={handleAdd} submitLabel="Add to Order" />
 
           <div style={styles.details}>
-            <p><strong>Ingredients:</strong> {info.ingredients || 'Ask us for full ingredient details.'}</p>
-            <p><strong>Contains:</strong> {info.contains}</p>
-            <p><strong>Shelf Life:</strong> {info.bestBefore}</p>
+            <p><strong>Ingredients:</strong> {ingredients}</p>
+            <p><strong>Contains:</strong> {contains}</p>
+            <p><strong>Shelf Life:</strong> {shelfLife}</p>
           </div>
         </div>
       </div>

@@ -8,6 +8,18 @@ const CATEGORY_LABELS = {
   gifting: 'Gifting',
 }
 
+const EMPTY_MENU_FORM = {
+  name: '',
+  category: 'tiramisu',
+  description: '',
+  options: [{ label: '', price: '' }],
+  dietaryOptions: ['Contains Egg', 'Eggless'],
+  messageOnCake: true,
+  ingredients: '',
+  shelfLife: '',
+  isFeatured: false,
+}
+
 export default function AdminDashboard(){
   const [token, setToken] = useState(null)
   const [authState, setAuthState] = useState('checking') // 'checking' | true | false
@@ -24,6 +36,8 @@ export default function AdminDashboard(){
   const [menuImageUploading, setMenuImageUploading] = useState(false)
   const [menuImagePreview, setMenuImagePreview] = useState('')
   const [menuImageUrl, setMenuImageUrl] = useState('')
+  const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM)
+  const [editingMenuItem, setEditingMenuItem] = useState(null)
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
 
   // Verify any saved token against the backend on mount so the dashboard
@@ -169,7 +183,71 @@ export default function AdminDashboard(){
     finally{ setMenuImageUploading(false) }
   }
 
-  async function addMenuItem(e){ e.preventDefault(); const form = e.target; const body = { name: form.name.value, category: form.category.value, description: form.description.value, price: Number(form.price.value), image: form.image.value, isFeatured: form.isFeatured.checked }; try{ await fetch('https://casa-misu.onrender.com/api/menu', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) }); fetchMenu(); form.reset(); setMenuImageUrl(''); setMenuImagePreview('') }catch(err){ console.error(err) } }
+  function resetMenuForm(){
+    setMenuForm(EMPTY_MENU_FORM)
+    setEditingMenuItem(null)
+    setMenuImageUrl('')
+    setMenuImagePreview('')
+  }
+
+  function updateMenuOption(index, field, value){
+    setMenuForm((current) => ({
+      ...current,
+      options: current.options.map((option, optionIndex) => optionIndex === index ? { ...option, [field]: value } : option),
+    }))
+  }
+
+  function toggleDietaryOption(option){
+    setMenuForm((current) => ({
+      ...current,
+      dietaryOptions: current.dietaryOptions.includes(option)
+        ? current.dietaryOptions.filter((item) => item !== option)
+        : [...current.dietaryOptions, option],
+    }))
+  }
+
+  function editMenuItem(item){
+    setEditingMenuItem(item)
+    setMenuForm({
+      name: item.name || '',
+      category: item.category || 'tiramisu',
+      description: item.description || '',
+      options: item.options?.length ? item.options.map(({ label, price }) => ({ label, price: String(price) })) : [{ label: '', price: String(item.price || '') }],
+      dietaryOptions: item.dietaryOptions?.length ? item.dietaryOptions : ['Contains Egg', 'Eggless'],
+      messageOnCake: item.messageOnCake !== false,
+      ingredients: item.ingredients || '',
+      shelfLife: item.shelfLife || '',
+      isFeatured: Boolean(item.isFeatured),
+    })
+    setMenuImageUrl(item.image || '')
+    setMenuImagePreview(item.image || '')
+  }
+
+  async function addMenuItem(e){
+    e.preventDefault()
+    const options = menuForm.options
+      .map((option) => ({ label: option.label.trim(), price: Number(option.price) }))
+      .filter((option) => option.label && Number.isFinite(option.price) && option.price >= 0)
+    if (!options.length) { alert('Add at least one size or weight with its price.'); return }
+
+    const body = {
+      ...menuForm,
+      options,
+      price: options[0].price,
+      image: menuImageUrl,
+    }
+    try{
+      const url = editingMenuItem ? `https://casa-misu.onrender.com/api/menu/${editingMenuItem._id}` : 'https://casa-misu.onrender.com/api/menu'
+      const res = await fetch(url, {
+        method: editingMenuItem ? 'PUT' : 'POST',
+        headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) throw new Error('Unable to save menu item')
+      fetchMenu()
+      resetMenuForm()
+    }catch(err){ console.error(err); alert('Unable to save menu item. Please try again.') }
+  }
 
   async function deleteMenuItem(id){ if(!confirm('Delete item?')) return; try{ await fetch(`https://casa-misu.onrender.com/api/menu/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchMenu(); }catch(err){ console.error(err) } }
 
@@ -377,65 +455,68 @@ export default function AdminDashboard(){
           {activeTab === 'menu' && (
             <div>
               <h3>Menu Management</h3>
-              <form onSubmit={addMenuItem} style={{ display:'flex', gap:8, marginBottom:12, flexWrap:'wrap' }}>
-                <input name="name" placeholder="Name" required style={{ padding:6 }} />
-                <select name="category" defaultValue="tiramisu" style={{ padding:6 }}>
-                  <option value="tiramisu">Tiramisu</option>
-                  <option value="cookies">Cookies</option>
-                  <option value="desserts">Desserts</option>
-                </select>
-                <input name="description" placeholder="Description" style={{ padding:6 }} />
-                <input name="price" type="number" placeholder="Price" required style={{ padding:6 }} />
-                <input type="hidden" name="image" value={menuImageUrl} />
-                <div style={{
-                  border: '2px dashed #1B2E70',
-                  borderRadius: '8px',
-                  padding: '10px 16px',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  background: '#FAF6EE'
-                }}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMenuImageUpload}
-                    style={{ display: 'none' }}
-                    id="menuImageUpload"
-                  />
-                  <label htmlFor="menuImageUpload"
-                    style={{ cursor: 'pointer', color: '#1B2E70', fontSize: 13 }}>
-                    {menuImageUploading ? 'Uploading...' :
-                     menuImagePreview ? '✓ Image selected (click to change)' :
-                     '📷 Choose image from your device'}
-                  </label>
-                  {menuImagePreview && (
-                    <img src={menuImagePreview}
-                      style={{
-                        width: '60px',
-                        height: '60px',
-                        objectFit: 'cover',
-                        marginTop: '8px',
-                        borderRadius: '6px',
-                        display: 'block',
-                        margin: '8px auto 0'
-                      }}
-                    />
-                  )}
+              <form onSubmit={addMenuItem} style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20 }}>
+                <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:12 }}>{editingMenuItem ? 'Edit menu item' : 'Add menu item'}</div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:10 }}>
+                  <input value={menuForm.name} onChange={e=>setMenuForm({ ...menuForm, name:e.target.value })} placeholder="Name" required style={{ padding:8 }} />
+                  <select value={menuForm.category} onChange={e=>setMenuForm({ ...menuForm, category:e.target.value })} style={{ padding:8 }}>
+                    <option value="tiramisu">Tiramisu</option>
+                    <option value="cookies">Cookies</option>
+                    <option value="desserts">Desserts</option>
+                    <option value="gifting">Gifting</option>
+                  </select>
+                  <input value={menuForm.description} onChange={e=>setMenuForm({ ...menuForm, description:e.target.value })} placeholder="Description" style={{ padding:8 }} />
+                  <input value={menuForm.ingredients} onChange={e=>setMenuForm({ ...menuForm, ingredients:e.target.value })} placeholder="Ingredients (optional)" style={{ padding:8 }} />
+                  <input value={menuForm.shelfLife} onChange={e=>setMenuForm({ ...menuForm, shelfLife:e.target.value })} placeholder="Shelf life (optional)" style={{ padding:8 }} />
                 </div>
-                <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" name="isFeatured" /> Featured</label>
-                <button style={{ background:'#1B2E70', color:'#fff', padding:'6px 10px', borderRadius:6 }}>Add</button>
+
+                <div style={{ marginTop:16 }}>
+                  <div style={{ fontWeight:600, color:'#1B2E70', marginBottom:6 }}>Sizes / weights and prices</div>
+                  <div style={{ fontSize:12, color:'#666', marginBottom:8 }}>Add one option for a single-size product, or add as many as you need (for example, 350g and 400g).</div>
+                  {menuForm.options.map((option, index) => (
+                    <div key={index} style={{ display:'flex', gap:8, marginBottom:8, maxWidth:520 }}>
+                      <input value={option.label} onChange={e=>updateMenuOption(index, 'label', e.target.value)} placeholder="Size / weight, e.g. 350g" required style={{ padding:8, flex:1 }} />
+                      <input value={option.price} onChange={e=>updateMenuOption(index, 'price', e.target.value)} type="number" min="0" placeholder="Price ₹" required style={{ padding:8, width:120 }} />
+                      {menuForm.options.length > 1 && <button type="button" onClick={()=>setMenuForm({ ...menuForm, options: menuForm.options.filter((_, optionIndex) => optionIndex !== index) })} style={{ padding:'6px 10px' }}>Remove</button>}
+                    </div>
+                  ))}
+                  <button type="button" onClick={()=>setMenuForm({ ...menuForm, options:[...menuForm.options, { label:'', price:'' }] })} style={{ padding:'6px 10px' }}>+ Add another size</button>
+                </div>
+
+                <div style={{ marginTop:16 }}>
+                  <div style={{ fontWeight:600, color:'#1B2E70', marginBottom:6 }}>Dietary options customers can choose</div>
+                  <label style={{ marginRight:16 }}><input type="checkbox" checked={menuForm.dietaryOptions.includes('Contains Egg')} onChange={()=>toggleDietaryOption('Contains Egg')} /> Contains Egg</label>
+                  <label><input type="checkbox" checked={menuForm.dietaryOptions.includes('Eggless')} onChange={()=>toggleDietaryOption('Eggless')} /> Eggless</label>
+                </div>
+
+                <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', marginTop:16 }}>
+                  <div style={{
+                    border: '2px dashed #1B2E70', borderRadius: '8px', padding: '10px 16px', textAlign: 'center', cursor: 'pointer', background: '#FAF6EE'
+                  }}>
+                    <input type="file" accept="image/*" onChange={handleMenuImageUpload} style={{ display: 'none' }} id="menuImageUpload" />
+                    <label htmlFor="menuImageUpload" style={{ cursor: 'pointer', color: '#1B2E70', fontSize: 13 }}>
+                      {menuImageUploading ? 'Uploading...' : menuImagePreview ? '✓ Image selected (click to change)' : '📷 Choose image from your device'}
+                    </label>
+                    {menuImagePreview && <img src={menuImagePreview} alt="Selected menu item" style={{ width:60, height:60, objectFit:'cover', borderRadius:6, display:'block', margin:'8px auto 0' }} />}
+                  </div>
+                  <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.messageOnCake} onChange={e=>setMenuForm({ ...menuForm, messageOnCake:e.target.checked })} /> Allow a message on the cake</label>
+                  <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.isFeatured} onChange={e=>setMenuForm({ ...menuForm, isFeatured:e.target.checked })} /> Featured</label>
+                  <button style={{ background:'#1B2E70', color:'#fff', padding:'8px 14px', borderRadius:6 }}>{editingMenuItem ? 'Save changes' : 'Add item'}</button>
+                  {editingMenuItem && <button type="button" onClick={resetMenuForm} style={{ padding:'8px 14px' }}>Cancel</button>}
+                </div>
               </form>
 
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
-                <thead><tr style={{ borderBottom:'1px solid #ddd' }}><th>Name</th><th>Category</th><th>Price</th><th>Available</th><th>Actions</th></tr></thead>
+                <thead><tr style={{ borderBottom:'1px solid #ddd' }}><th>Name</th><th>Category</th><th>Sizes / prices</th><th>Dietary</th><th>Available</th><th>Actions</th></tr></thead>
                 <tbody>
                   {menuItems.map(m=> (
                     <tr key={m._id} style={{ borderBottom:'1px solid #f0f0f0' }}>
                       <td>{m.name}</td>
                       <td>{m.category}</td>
-                      <td>{m.price}</td>
+                      <td>{m.options?.length ? m.options.map(option => `${option.label} — ₹${option.price}`).join(', ') : `₹${m.price}`}</td>
+                      <td>{m.dietaryOptions?.length ? m.dietaryOptions.join(', ') : 'Contains Egg, Eggless'}</td>
                       <td><button onClick={()=>toggleAvailability(m._id)} style={{ padding:6 }}>{m.isAvailable ? 'Yes':'No'}</button></td>
-                      <td><button onClick={()=>deleteMenuItem(m._id)} style={{ background:'#8B3A2A', color:'#fff', padding:'6px 8px', borderRadius:6 }}>Delete</button></td>
+                      <td><div style={{ display:'flex', gap:6 }}><button onClick={()=>editMenuItem(m)} style={{ padding:'6px 8px' }}>Edit</button><button onClick={()=>deleteMenuItem(m._id)} style={{ background:'#8B3A2A', color:'#fff', padding:'6px 8px', borderRadius:6 }}>Delete</button></div></td>
                     </tr>
                   ))}
                 </tbody>
