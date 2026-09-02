@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import './ProductDetailPage.css'
 import ProductOptionsForm from '../components/ProductOptionsForm'
 import { getProductDetails } from '../constants/productDetails'
-import { addItemToOrder } from '../utils/cartBridge'
+import { addToCart } from '../utils/cartStore'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
-import giftIcon from '../assets/gift-maroon.svg'
 
 const NAVY = '#1B2E70'
 
@@ -14,7 +13,6 @@ const CATEGORY_ICONS = {
   tiramisu: tiramisuIcon,
   cookies: cookieIcon,
   desserts: cakeIcon,
-  gifting: giftIcon,
 }
 
 export default function ProductDetailPage() {
@@ -40,7 +38,7 @@ export default function ProductDetailPage() {
   const menuUrl = `${homeUrl}#menu`
 
   function handleAdd(configuredItem) {
-    addItemToOrder({ ...configuredItem, image })
+    addToCart({ ...configuredItem, image })
   }
 
   return (

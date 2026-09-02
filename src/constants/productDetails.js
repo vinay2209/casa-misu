@@ -62,11 +62,6 @@ const GENERIC_BY_CATEGORY = {
     contains: 'Alcohol Free | Eggless available on request',
     bestBefore: 'Consume within 3 days of delivery. Keep refrigerated.',
   },
-  gifting: {
-    description: 'Curated and packed with care — perfect for gifting.',
-    contains: 'Contents vary by box | Ask us for details',
-    bestBefore: 'Best enjoyed within 5 days of delivery.',
-  },
 }
 
 export function getProductDetails(name, category) {

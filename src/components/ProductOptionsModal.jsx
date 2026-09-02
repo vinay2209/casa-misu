@@ -1,5 +1,5 @@
 import ProductOptionsForm from './ProductOptionsForm'
-import { addItemToOrder } from '../utils/cartBridge'
+import { addToCart } from '../utils/cartStore'
 
 const NAVY = '#1B2E70'
 
@@ -12,7 +12,7 @@ export default function ProductOptionsModal({ product, onClose }) {
 
   function handleAdd(configuredItem) {
     onClose()
-    addItemToOrder({ ...configuredItem, image: product.image })
+    addToCart({ ...configuredItem, image: product.image })
   }
 
   return (

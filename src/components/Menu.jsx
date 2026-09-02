@@ -7,13 +7,11 @@ import { minPriceForCategory } from '../constants/sizeOptions'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
-import giftIcon from '../assets/gift-maroon.svg'
 
 const CATEGORY_ICONS = {
   tiramisu: tiramisuIcon,
   cookies: cookieIcon,
   desserts: cakeIcon,
-  gifting: giftIcon,
 }
 
 const DEFAULT_PRODUCTS = [
@@ -22,7 +20,6 @@ const DEFAULT_PRODUCTS = [
   { id: 'default-3', name: 'Strawberry Tiramisu', price: 400, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&q=80', category: 'tiramisu' },
   { id: 'default-4', name: 'Seasonal Tiramisu', price: 380, image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&q=80', category: 'tiramisu' },
   { id: 'default-5', name: 'Cookies Box', price: 250, image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&q=80', category: 'cookies' },
-  { id: 'default-6', name: 'Gifting Box', price: 600, image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80', category: 'gifting' },
 ]
 
 export default function Menu() {

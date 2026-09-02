@@ -49,7 +49,6 @@ export default function Footer() {
             <li><a href="#menu">Tiramisu</a></li>
             <li><a href="#menu">Cookies</a></li>
             <li><a href="#menu">Desserts</a></li>
-            <li><a href="#menu">Gifting</a></li>
           </ul>
         </div>
 

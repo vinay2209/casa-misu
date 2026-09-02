@@ -16,11 +16,6 @@ export const SIZE_OPTIONS = {
     { label: 'Pack of 2', price: 320 },
     { label: 'Pack of 4', price: 580 },
   ],
-  gifting: [
-    { label: 'Small Gift Box', price: 600 },
-    { label: 'Medium Gift Box', price: 950 },
-    { label: 'Premium Gift Box', price: 1500 },
-  ],
 }
 
 export function sizesForCategory(category) {

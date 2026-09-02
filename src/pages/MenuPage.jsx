@@ -7,13 +7,11 @@ import { minPriceForCategory } from '../constants/sizeOptions'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
-import giftIcon from '../assets/gift-maroon.svg'
 
 const CATEGORY_ICONS = {
   tiramisu: tiramisuIcon,
   cookies: cookieIcon,
   desserts: cakeIcon,
-  gifting: giftIcon,
 }
 
 const initialProducts = [
@@ -24,7 +22,6 @@ const initialProducts = [
   { id: 5, category: 'cookies', title: 'Tiramisu Cookie', desc: 'All the flavour of tiramisu in a soft chewy cookie', price: '₹320 (pack of 2) / ₹620 (pack of 4) / ₹920 (pack of 6)' },
   { id: 6, category: 'cookies', title: 'Nutella Cookie Tin', desc: 'Rich Nutella-filled cookies in a beautiful gifting tin', price: '₹460 (small) / ₹740 (medium) / ₹1290 (large)' },
   { id: 7, category: 'desserts', title: 'Seasonal Dessert', desc: 'Ask us about our rotating seasonal dessert specials', price: 'Price on request' },
-  { id: 8, category: 'gifting', title: 'Custom Gift Box', desc: 'Curated dessert gift boxes for every occasion', price: 'Price on request' }
 ]
 
 export default function MenuPage() {
@@ -66,7 +63,7 @@ export default function MenuPage() {
       <SectionHeading title="OUR MENU" subtitle="Something sweet for every craving" />
 
       <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 18 }}>
-        {['all','tiramisu','cookies','desserts','gifting'].map(c => (
+        {['all','tiramisu','cookies','desserts'].map(c => (
           <button key={c} onClick={() => setCategory(c)} style={{ padding: '8px 14px', borderRadius: 999, border: category===c ? 'none' : '1.5px solid var(--navy)', background: category===c ? 'var(--navy)' : 'transparent', color: category===c ? '#fff' : 'var(--navy)', fontWeight:600, letterSpacing:'0.08em' }}>{c.toUpperCase()}</button>
         ))}
       </div>

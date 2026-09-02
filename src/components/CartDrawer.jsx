@@ -1,20 +1,49 @@
+import { useEffect, useState } from 'react'
+import { getCart, updateQuantity, removeFromCart } from '../utils/cartStore'
+
 const NAVY = '#1B2E70'
 const RUST = '#8B3A2A'
 
-export default function CartDrawer({ cart, total, open, onClose, onCheckout }) {
+export default function CartDrawer() {
+  const [open, setOpen] = useState(false)
+  const [cart, setCart] = useState({})
+
+  useEffect(() => {
+    setCart(getCart())
+    function refresh() {
+      setCart(getCart())
+    }
+    function openDrawer() {
+      setOpen(true)
+      setCart(getCart())
+    }
+    window.addEventListener('casamisu:cart-changed', refresh)
+    window.addEventListener('casamisu:open-cart', openDrawer)
+    return () => {
+      window.removeEventListener('casamisu:cart-changed', refresh)
+      window.removeEventListener('casamisu:open-cart', openDrawer)
+    }
+  }, [])
+
   const items = Object.values(cart).filter((c) => c.quantity > 0)
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+  function goToCheckout() {
+    setOpen(false)
+    window.location.href = `${import.meta.env.BASE_URL}?page=checkout`
+  }
 
   return (
     <>
       <div
         style={{ ...styles.backdrop, opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none' }}
-        onClick={onClose}
+        onClick={() => setOpen(false)}
         aria-hidden={!open}
       />
       <div style={{ ...styles.drawer, transform: open ? 'translateX(0)' : 'translateX(100%)' }} role="dialog" aria-modal="true" aria-label="Cart">
         <div style={styles.header}>
-          <h3 style={styles.title}>✓ Added to Cart</h3>
-          <button type="button" style={styles.closeBtn} onClick={onClose} aria-label="Close cart">×</button>
+          <h3 style={styles.title}>Your Cart</h3>
+          <button type="button" style={styles.closeBtn} onClick={() => setOpen(false)} aria-label="Close cart">×</button>
         </div>
 
         <div style={styles.body}>
@@ -37,7 +66,12 @@ export default function CartDrawer({ cart, total, open, onClose, onCheckout }) {
                       {item.message && `"${item.message}"`}
                     </div>
                   )}
-                  <div style={styles.itemMeta}>Qty: {item.quantity}</div>
+                  <div style={styles.qtyRow}>
+                    <button type="button" style={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Decrease quantity">−</button>
+                    <span style={styles.qtyNum}>{item.quantity}</span>
+                    <button type="button" style={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Increase quantity">+</button>
+                    <button type="button" style={styles.removeBtn} onClick={() => removeFromCart(item.id)}>Remove</button>
+                  </div>
                 </div>
                 <span style={styles.itemPrice}>₹{item.price * item.quantity}</span>
               </div>
@@ -51,10 +85,10 @@ export default function CartDrawer({ cart, total, open, onClose, onCheckout }) {
               <span>Subtotal</span>
               <span style={{ color: RUST, fontWeight: 700 }}>₹{total}</span>
             </div>
-            <button type="button" style={styles.checkoutBtn} onClick={onCheckout}>
+            <button type="button" style={styles.checkoutBtn} onClick={goToCheckout}>
               Checkout
             </button>
-            <button type="button" style={styles.continueBtn} onClick={onClose}>
+            <button type="button" style={styles.continueBtn} onClick={() => setOpen(false)}>
               Continue Shopping
             </button>
           </div>
@@ -147,6 +181,40 @@ const styles = {
     fontSize: 11,
     color: '#777',
     marginTop: 2,
+  },
+  qtyRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  qtyBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: '50%',
+    border: `1.5px solid ${NAVY}`,
+    background: 'transparent',
+    color: NAVY,
+    fontSize: 13,
+    cursor: 'pointer',
+    lineHeight: 1,
+    padding: 0,
+  },
+  qtyNum: {
+    fontSize: 12,
+    fontWeight: 700,
+    minWidth: 14,
+    textAlign: 'center',
+  },
+  removeBtn: {
+    background: 'none',
+    border: 'none',
+    color: '#999',
+    fontSize: 10,
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    marginLeft: 6,
+    padding: 0,
   },
   itemPrice: {
     fontSize: 13,

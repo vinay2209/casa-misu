@@ -25,7 +25,6 @@ export default function HeroSection() {
                       <a href={pagePath('?page=menu&category=tiramisu')}>Tiramisu</a>
                       <a href={pagePath('?page=menu&category=cookies')}>Cookies</a>
                       <a href={pagePath('?page=menu&category=desserts')}>Desserts</a>
-                      <a href={pagePath('?page=menu&category=gifting')}>Gifting</a>
                     </div>
                   </div>
                 )
@@ -47,16 +46,22 @@ export default function HeroSection() {
           </div>
 
           <div className="hero-nav-links hero-nav-right">
-            {['Order', 'FAQ', 'Contact'].map((l) => (
+            <a href="#menu">Order</a>
+            {['FAQ', 'Contact'].map((l) => (
               <a key={l} href={`#${l.toLowerCase()}`}>{l}</a>
             ))}
-            <a href="#order" className="hero-cart" aria-label="Cart">
+            <button
+              type="button"
+              className="hero-cart"
+              aria-label="Open cart"
+              onClick={() => window.dispatchEvent(new CustomEvent('casamisu:open-cart'))}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" strokeWidth="1.6" fill="none"/>
                 <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="1.6"/>
                 <path d="M16 10a4 4 0 01-8 0" stroke="currentColor" strokeWidth="1.6" fill="none"/>
               </svg>
-            </a>
+            </button>
           </div>
         </nav>
       </div>

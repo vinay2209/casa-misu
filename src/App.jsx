@@ -3,12 +3,13 @@ import AnnouncementBar from './components/AnnouncementBar'
 import HeroSection from './components/HeroSection'
 import Menu from './components/Menu'
 import ReserveOrder from './components/ReserveOrder'
-import OrderFlow from './components/OrderFlow'
+import CartDrawer from './components/CartDrawer'
 import FAQ from './components/FAQ'
 import Footer from './components/Footer'
 import AdminDashboard from './components/AdminDashboard'
 import MenuPage from './pages/MenuPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import CheckoutPage from './pages/CheckoutPage'
 
 export default function App() {
   const params = typeof window !== 'undefined'
@@ -20,9 +21,22 @@ export default function App() {
   const isAdmin = path === '/admin' || path.startsWith('/admin')
   const isMenuPage = path === '/menu' || params.get('page') === 'menu'
   const isProductPage = params.get('page') === 'product'
+  const isCheckoutPage = params.get('page') === 'checkout'
 
   if (isAdmin) {
     return <AdminDashboard />
+  }
+
+  if (isCheckoutPage) {
+    return (
+      <div className="site-page">
+        <AnnouncementBar />
+        <HeroSection />
+        <CheckoutPage />
+        <Footer />
+        <CartDrawer />
+      </div>
+    )
   }
 
   if (isProductPage) {
@@ -32,6 +46,7 @@ export default function App() {
         <HeroSection />
         <ProductDetailPage />
         <Footer />
+        <CartDrawer />
       </div>
     )
   }
@@ -43,6 +58,7 @@ export default function App() {
         <HeroSection />
         <MenuPage />
         <Footer />
+        <CartDrawer />
       </div>
     )
   }
@@ -53,11 +69,11 @@ export default function App() {
       <HeroSection />
       <div className="site-body">
         <Menu />
-        <OrderFlow />
         <FAQ />
         <Footer />
         <ReserveOrder />
       </div>
+      <CartDrawer />
     </div>
   )
 }
