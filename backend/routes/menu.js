@@ -6,6 +6,7 @@ const { protect } = require('../middleware/auth');
 // GET /api/menu
 router.get('/', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
     const category = req.query.category;
     const query = category ? { category } : {};
     const items = await MenuItem.find(query).sort({ createdAt: -1 });
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
 // GET /api/menu/featured
 router.get('/featured', async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
     const items = await MenuItem.find({ isFeatured: true });
     res.json(items);
   } catch (err) {

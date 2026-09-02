@@ -29,7 +29,7 @@ export default function Menu() {
   useEffect(() => {
     // Pull the real, admin-managed menu; fall back to the demo list only
     // if the backend has nothing yet, so the section is never empty.
-    fetch('https://casa-misu.onrender.com/api/menu')
+    fetch('https://casa-misu.onrender.com/api/menu', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

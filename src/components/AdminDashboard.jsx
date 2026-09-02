@@ -82,7 +82,7 @@ export default function AdminDashboard(){
     }catch(err){ console.error(err) }
   }
   async function fetchMenu(){
-    try{ const res = await fetch('https://casa-misu.onrender.com/api/menu'); const data = await res.json(); setMenuItems(Array.isArray(data) ? data : []) }catch(err){ console.error(err) }
+    try{ const res = await fetch('https://casa-misu.onrender.com/api/menu', { cache: 'no-store' }); const data = await res.json(); setMenuItems(Array.isArray(data) ? data : []) }catch(err){ console.error(err) }
   }
   async function fetchGallery(){
     try{

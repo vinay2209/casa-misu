@@ -23,7 +23,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState({ name, category, isAvailable: true })
 
   useEffect(() => {
-    fetch('https://casa-misu.onrender.com/api/menu')
+    fetch('https://casa-misu.onrender.com/api/menu', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
