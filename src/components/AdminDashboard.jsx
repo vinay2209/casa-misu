@@ -485,8 +485,9 @@ export default function AdminDashboard(){
 
                 <div style={{ marginTop:16 }}>
                   <div style={{ fontWeight:600, color:'#1B2E70', marginBottom:6 }}>Dietary options customers can choose</div>
-                  <label style={{ marginRight:16 }}><input type="checkbox" checked={menuForm.dietaryOptions.includes('Contains Egg')} onChange={()=>toggleDietaryOption('Contains Egg')} /> Contains Egg</label>
-                  <label><input type="checkbox" checked={menuForm.dietaryOptions.includes('Eggless')} onChange={()=>toggleDietaryOption('Eggless')} /> Eggless</label>
+                  {['Contains Egg', 'Eggless', 'Vegan', 'Sugar Free'].map((option) => (
+                    <label key={option} style={{ marginRight:16 }}><input type="checkbox" checked={menuForm.dietaryOptions.includes(option)} onChange={()=>toggleDietaryOption(option)} /> {option}</label>
+                  ))}
                 </div>
 
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', marginTop:16 }}>
@@ -515,7 +516,7 @@ export default function AdminDashboard(){
                       <td>{m.category}</td>
                       <td>{m.options?.length ? m.options.map(option => `${option.label} — ₹${option.price}`).join(', ') : `₹${m.price}`}</td>
                       <td>{m.dietaryOptions?.length ? m.dietaryOptions.join(', ') : 'Contains Egg, Eggless'}</td>
-                      <td><button onClick={()=>toggleAvailability(m._id)} style={{ padding:6 }}>{m.isAvailable ? 'Yes':'No'}</button></td>
+                      <td><button onClick={()=>toggleAvailability(m._id)} style={{ padding:6 }}>{m.isAvailable ? 'In stock' : 'Out of stock'}</button></td>
                       <td><div style={{ display:'flex', gap:6 }}><button onClick={()=>editMenuItem(m)} style={{ padding:'6px 8px' }}>Edit</button><button onClick={()=>deleteMenuItem(m._id)} style={{ background:'#8B3A2A', color:'#fff', padding:'6px 8px', borderRadius:6 }}>Delete</button></div></td>
                     </tr>
                   ))}

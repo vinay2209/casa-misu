@@ -20,7 +20,7 @@ export default function ProductDetailPage() {
   const name = params.get('name') || ''
   const category = params.get('category') || 'tiramisu'
   const [image, setImage] = useState(params.get('image') || null)
-  const [product, setProduct] = useState({ name, category })
+  const [product, setProduct] = useState({ name, category, isAvailable: true })
 
   useEffect(() => {
     fetch('https://casa-misu.onrender.com/api/menu')

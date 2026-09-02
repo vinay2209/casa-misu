@@ -46,6 +46,7 @@ export default function Menu() {
               description: item.description,
               ingredients: item.ingredients,
               shelfLife: item.shelfLife,
+              isAvailable: item.isAvailable,
             }))
           )
         }
@@ -82,13 +83,17 @@ export default function Menu() {
             <div className="menu-product-body">
               <h3>{p.name}</h3>
               <p className="menu-product-price">From ₹{minimumProductPrice(p)}</p>
-              <button
-                type="button"
-                className="btn-order-now"
-                onClick={() => setSelectedProduct(p)}
-              >
-                SELECT OPTIONS
-              </button>
+              {p.isAvailable === false ? (
+                <span className="menu-product-out-of-stock">OUT OF STOCK</span>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-order-now"
+                  onClick={() => setSelectedProduct(p)}
+                >
+                  SELECT OPTIONS
+                </button>
+              )}
             </div>
           </article>
         ))}

@@ -15,6 +15,10 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
   const [message, setMessage] = useState('')
   const [quantity, setQuantity] = useState(1)
 
+  if (product.isAvailable === false) {
+    return <p style={styles.outOfStock}>This product is currently out of stock.</p>
+  }
+
   function handleAdd() {
     onAdd({
       name: product.name,
@@ -124,6 +128,14 @@ const styles = {
     fontSize: 26,
     color: NAVY,
     margin: 0,
+  },
+  outOfStock: {
+    color: '#8B3A2A',
+    border: '1px solid #8B3A2A',
+    borderRadius: 6,
+    padding: 12,
+    margin: 0,
+    fontWeight: 600,
   },
   field: {
     display: 'flex',

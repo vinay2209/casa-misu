@@ -92,6 +92,18 @@
   margin: 0 0 4px;
 }
 
+.menu-product-out-of-stock {
+  display: inline-block;
+  color: #8B3A2A;
+  border: 1px solid #8B3A2A;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
 .menu-product-body .btn-order-now {
   margin-top: auto;
 }
