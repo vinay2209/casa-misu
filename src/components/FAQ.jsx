@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: 'How do I pay?',
-    a: 'Payments are made via UPI, confirmed with a transaction ID when you place your order online.',
+    a: 'Payments are processed securely through Razorpay. You can use UPI, credit or debit cards, net banking, wallets, and any other payment option available at checkout.',
   },
   {
     q: 'Do you deliver, or is it pickup only?',
