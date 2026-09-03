@@ -72,7 +72,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        © 2024 Casa Misu. All Rights Reserved. ♡
+        © Casa Misu. All Rights Reserved. ♡
       </div>
     </footer>
   )
