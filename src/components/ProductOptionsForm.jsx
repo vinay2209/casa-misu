@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { sizesForCategory } from '../constants/sizeOptions'
 
 const NAVY = '#1B2E70'
+const TOPPER_FEE = 10
+const TOPPER_OPTIONS = ['Happy Birthday', 'Happy Anniversary']
 
 export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add to Order' }) {
   const sizes = Array.isArray(product.options) && product.options.length > 0
@@ -12,8 +14,10 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
     : ['Contains Egg', 'Eggless']
   const [size, setSize] = useState(sizes[0])
   const [dietaryPreference, setDietaryPreference] = useState(dietaryOptions[0])
-  const [message, setMessage] = useState('')
+  const [topper, setTopper] = useState('')
   const [quantity, setQuantity] = useState(1)
+
+  const unitPrice = size.price + (topper ? TOPPER_FEE : 0)
 
   if (product.isAvailable === false) {
     return <p style={styles.outOfStock}>This product is currently out of stock.</p>
@@ -24,16 +28,16 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
       name: product.name,
       category: product.category,
       size: size.label,
-      price: size.price,
+      price: unitPrice,
       quantity,
       dietaryPreference,
-      message: message.trim(),
+      message: topper,
     })
   }
 
   return (
     <div style={styles.wrap}>
-      <p style={styles.price}>₹{size.price}</p>
+      <p style={styles.price}>₹{unitPrice}</p>
 
       <div style={styles.field}>
         <span style={styles.label}>{sizes.length === 1 ? 'Size' : `Weight: ${size.label}`}</span>
@@ -78,17 +82,24 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
       </div>
 
       {product.messageOnCake !== false && (
-        <label style={styles.field}>
-          <span style={styles.label}>Message on the cake (optional)</span>
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="e.g. Happy Birthday Riya!"
-            style={styles.input}
-            maxLength={60}
-          />
-        </label>
+        <div style={styles.field}>
+          <span style={styles.label}>Add a topper + ₹10</span>
+          <div style={styles.pillRow}>
+            {TOPPER_OPTIONS.map((opt) => {
+              const active = opt === topper
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  style={{ ...styles.pill, ...(active ? styles.pillActive : {}) }}
+                  onClick={() => setTopper(active ? '' : opt)}
+                >
+                  {opt}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       )}
 
       <div style={styles.field}>

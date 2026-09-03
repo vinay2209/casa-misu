@@ -10,6 +10,7 @@ import AdminDashboard from './components/AdminDashboard'
 import MenuPage from './pages/MenuPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CheckoutPage from './pages/CheckoutPage'
+import GalleryPage from './pages/GalleryPage'
 
 export default function App() {
   const params = typeof window !== 'undefined'
@@ -22,9 +23,24 @@ export default function App() {
   const isMenuPage = path === '/menu' || params.get('page') === 'menu'
   const isProductPage = params.get('page') === 'product'
   const isCheckoutPage = params.get('page') === 'checkout'
+  const isGalleryPage = params.get('page') === 'gallery'
 
   if (isAdmin) {
     return <AdminDashboard />
+  }
+
+  if (isGalleryPage) {
+    return (
+      <div className="site-page">
+        <AnnouncementBar />
+        <HeroSection />
+        <div className="site-body">
+          <GalleryPage />
+          <Footer />
+        </div>
+        <CartDrawer />
+      </div>
+    )
   }
 
   if (isCheckoutPage) {

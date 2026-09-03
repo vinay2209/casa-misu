@@ -2,39 +2,30 @@ import './HeroSection.css'
 import logo from '../assets/logo.png'
 import sketchCake from '../assets/sketch-cake.png'
 import sketchMix from '../assets/sketch-mix.png'
+import { homeHref, sectionHref, pagePath, galleryHref } from '../utils/navLinks'
 
 const RUST = '#8B3A2A'
 
 export default function HeroSection() {
-  const pagePath = (path) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
-
   return (
     <header id="home" className="hero">
       <div className="hero-stripes">
         <nav className="hero-nav">
           <div className="hero-nav-links hero-nav-left">
-            {['Home', 'Menu', 'About Us'].map((l) => {
-              // Insert dropdown markup only for Menu link
-              if (l === 'Menu') {
-                return (
-                  <div key={l} className="nav-item-dropdown">
-                    <a href={`#${l.toLowerCase().replace(' ', '-')}`} className="nav-main-link">{l}</a>
+            <a href={homeHref()}>Home</a>
 
-                    <div className="nav-dropdown" aria-hidden="true">
-                      <a href={pagePath('?page=menu&category=all')}>All</a>
-                      <a href={pagePath('?page=menu&category=tiramisu')}>Tiramisu</a>
-                      <a href={pagePath('?page=menu&category=cookies')}>Cookies</a>
-                      <a href={pagePath('?page=menu&category=desserts')}>Desserts</a>
-                    </div>
-                  </div>
-                )
-              }
+            <div className="nav-item-dropdown">
+              <a href={sectionHref('menu')} className="nav-main-link">Menu</a>
+              <div className="nav-dropdown" aria-hidden="true">
+                <a href={pagePath('?page=menu&category=all')}>All</a>
+                <a href={pagePath('?page=menu&category=tiramisu')}>Tiramisu</a>
+                <a href={pagePath('?page=menu&category=cookies')}>Cookies</a>
+                <a href={pagePath('?page=menu&category=desserts')}>Desserts</a>
+              </div>
+            </div>
 
-              const href = l === 'About Us' ? pagePath('about.html') : `#${l.toLowerCase().replace(' ', '-')}`
-              return (
-                <a key={l} href={href}>{l}</a>
-              )
-            })}
+            <a href={pagePath('about.html')}>About Us</a>
+            <a href={galleryHref()}>Gallery</a>
           </div>
 
           <div className="hero-logo-badge">
@@ -46,9 +37,9 @@ export default function HeroSection() {
           </div>
 
           <div className="hero-nav-links hero-nav-right">
-            <a href="#menu">Order</a>
+            <a href={sectionHref('menu')}>Order</a>
             {['FAQ', 'Contact'].map((l) => (
-              <a key={l} href={`#${l.toLowerCase()}`}>{l}</a>
+              <a key={l} href={sectionHref(l.toLowerCase())}>{l}</a>
             ))}
             <button
               type="button"

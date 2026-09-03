@@ -500,7 +500,7 @@ export default function AdminDashboard(){
                     </label>
                     {menuImagePreview && <img src={menuImagePreview} alt="Selected menu item" style={{ width:60, height:60, objectFit:'cover', borderRadius:6, display:'block', margin:'8px auto 0' }} />}
                   </div>
-                  <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.messageOnCake} onChange={e=>setMenuForm({ ...menuForm, messageOnCake:e.target.checked })} /> Allow a message on the cake</label>
+                  <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.messageOnCake} onChange={e=>setMenuForm({ ...menuForm, messageOnCake:e.target.checked })} /> Allow topper option (+₹10)</label>
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.isFeatured} onChange={e=>setMenuForm({ ...menuForm, isFeatured:e.target.checked })} /> Featured</label>
                   <button style={{ background:'#1B2E70', color:'#fff', padding:'8px 14px', borderRadius:6 }}>{editingMenuItem ? 'Save changes' : 'Add item'}</button>
                   {editingMenuItem && <button type="button" onClick={resetMenuForm} style={{ padding:'8px 14px' }}>Cancel</button>}

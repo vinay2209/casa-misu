@@ -1,5 +1,6 @@
 import './Footer.css'
 import floralSketch from '../assets/floral-maroon.svg'
+import { homeHref, sectionHref, pagePath, galleryHref } from '../utils/navLinks'
 
 function WhatsAppIcon() {
   return (
@@ -26,28 +27,27 @@ function EmailIcon() {
 }
 
 export default function Footer() {
-  const pagePath = (path) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
-
   return (
     <footer id="contact" className="site-footer">
       <div className="footer-inner">
         <div className="footer-col">
           <h4>QUICK LINKS</h4>
           <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#menu">Menu</a></li>
+            <li><a href={homeHref()}>Home</a></li>
+            <li><a href={sectionHref('menu')}>Menu</a></li>
             <li><a href={pagePath('about.html')}>About Us</a></li>
-            <li><a href="#faq">FAQ</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href={galleryHref()}>Gallery</a></li>
+            <li><a href={sectionHref('faq')}>FAQ</a></li>
+            <li><a href={sectionHref('contact')}>Contact</a></li>
           </ul>
         </div>
 
         <div className="footer-col">
           <h4>OUR MENU</h4>
           <ul>
-            <li><a href="#menu">Tiramisu</a></li>
-            <li><a href="#menu">Cookies</a></li>
-            <li><a href="#menu">Desserts</a></li>
+            <li><a href={sectionHref('menu')}>Tiramisu</a></li>
+            <li><a href={sectionHref('menu')}>Cookies</a></li>
+            <li><a href={sectionHref('menu')}>Desserts</a></li>
           </ul>
         </div>
 

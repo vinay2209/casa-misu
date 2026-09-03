@@ -4,7 +4,7 @@
 const CART_KEY = 'casamisu_cart'
 
 function keyFor(item) {
-  return `${item.name}__${item.size || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  return `${item.name}__${item.size || ''}__${item.dietaryPreference || ''}__${item.message || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 }
 
 function readCart() {
