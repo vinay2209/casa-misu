@@ -33,7 +33,7 @@ export default function App() {
     return (
       <div className="site-page">
         <AnnouncementBar />
-        <HeroSection />
+        <HeroSection showBanner={false} />
         <div className="site-body">
           <GalleryPage />
           <Footer />
@@ -47,7 +47,7 @@ export default function App() {
     return (
       <div className="site-page">
         <AnnouncementBar />
-        <HeroSection />
+        <HeroSection showBanner={false} />
         <div className="site-body">
           <CheckoutPage />
           <Footer />
@@ -61,7 +61,7 @@ export default function App() {
     return (
       <div className="site-page">
         <AnnouncementBar />
-        <HeroSection />
+        <HeroSection showBanner={false} />
         <div className="site-body">
           <ProductDetailPage />
           <Footer />
@@ -75,7 +75,7 @@ export default function App() {
     return (
       <div className="site-page">
         <AnnouncementBar />
-        <HeroSection />
+        <HeroSection showBanner={false} />
         <div className="site-body">
           <MenuPage />
           <Footer />

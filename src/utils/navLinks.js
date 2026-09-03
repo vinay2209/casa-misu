@@ -11,7 +11,15 @@ export function isHomePage() {
 }
 
 export function homeHref() {
-  return pagePath('')
+  const base = import.meta.env.BASE_URL || '/'
+  return base.endsWith('/') ? base : `${base}/`
+}
+
+export function navigateHome(e) {
+  if (!isHomePage()) {
+    e.preventDefault()
+    window.location.href = homeHref()
+  }
 }
 
 export function sectionHref(hash) {

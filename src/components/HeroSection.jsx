@@ -2,17 +2,17 @@ import './HeroSection.css'
 import logo from '../assets/logo.png'
 import sketchCake from '../assets/sketch-cake.png'
 import sketchMix from '../assets/sketch-mix.png'
-import { homeHref, sectionHref, pagePath, galleryHref } from '../utils/navLinks'
+import { homeHref, sectionHref, pagePath, galleryHref, navigateHome } from '../utils/navLinks'
 
 const RUST = '#8B3A2A'
 
-export default function HeroSection() {
+export default function HeroSection({ showBanner = true }) {
   return (
-    <header id="home" className="hero">
+    <header id={showBanner ? 'home' : undefined} className={`hero${showBanner ? '' : ' hero-compact'}`}>
       <div className="hero-stripes">
         <nav className="hero-nav">
           <div className="hero-nav-links hero-nav-left">
-            <a href={homeHref()}>Home</a>
+            <a href={homeHref()} onClick={navigateHome}>Home</a>
 
             <div className="nav-item-dropdown">
               <a href={sectionHref('menu')} className="nav-main-link">Menu</a>
@@ -57,6 +57,7 @@ export default function HeroSection() {
         </nav>
       </div>
 
+      {showBanner && (
       <div className="hero-arch-wrap">
         <img
           src={sketchCake}
@@ -125,6 +126,7 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
+      )}
     </header>
   )
 }

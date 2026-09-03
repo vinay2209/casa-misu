@@ -221,6 +221,21 @@
 .nav-dropdown a:hover{background:var(--hero-navy);color:#fff}
 .nav-item-dropdown:hover .nav-dropdown,.nav-item-dropdown:focus-within .nav-dropdown{display:flex}
 
+/* Compact header — nav only, no hero banner */
+.hero-compact::before {
+  height: 88px;
+}
+
+.hero-compact .hero-stripes {
+  padding-bottom: 14px;
+}
+
+.hero-compact .hero-logo-badge {
+  bottom: auto;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 @media (max-width: 900px) {
   .hero-nav-links a { font-size: 11px; }
   .hero-nav { padding: 10px 16px; }
