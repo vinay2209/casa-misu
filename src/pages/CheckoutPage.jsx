@@ -95,6 +95,8 @@ export default function CheckoutPage() {
   const [schedule, setSchedule] = useState({ orderType: 'asap', deliveryDate: '', deliveryTimeSlot: '' })
   const [checkoutError, setCheckoutError] = useState('')
   const [form, setForm] = useState({ customerName: '', customerPhone: '', customerEmail: '', address: '', specialRequests: '' })
+  const [settings, setSettings] = useState({ pickupAddresses: [], acceptingOrders: true })
+  const [pickupAddress, setPickupAddress] = useState('')
 
   useEffect(() => {
     setCart(getCart())
@@ -103,6 +105,22 @@ export default function CheckoutPage() {
     }
     window.addEventListener('casamisu:cart-changed', refresh)
     return () => window.removeEventListener('casamisu:cart-changed', refresh)
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        const addresses = Array.isArray(data.pickupAddresses) && data.pickupAddresses.length > 0
+          ? data.pickupAddresses
+          : [STORE_ADDRESS]
+        setSettings({ pickupAddresses: addresses, acceptingOrders: data.acceptingOrders !== false })
+        setPickupAddress(addresses[0])
+      })
+      .catch((err) => {
+        console.error(err)
+        setPickupAddress(STORE_ADDRESS)
+      })
   }, [])
 
   const cartItems = Object.values(cart).filter((c) => c.quantity > 0)
@@ -141,7 +159,7 @@ export default function CheckoutPage() {
           items: JSON.stringify(cartItems),
           totalAmount: total,
           deliveryType: shippingMethod,
-          address: shippingMethod === 'delivery' ? form.address : '',
+          address: shippingMethod === 'delivery' ? form.address : pickupAddress,
           deliveryFee,
           deliveryPincode: shippingMethod === 'delivery' ? pincode : '',
           specialRequests: form.specialRequests,
@@ -171,6 +189,10 @@ export default function CheckoutPage() {
   }
 
   async function handlePayAndPlaceOrder() {
+    if (!settings.acceptingOrders) {
+      setCheckoutError("We're not currently accepting orders. Please check back soon.")
+      return
+    }
     if (!form.customerName.trim() || !form.customerPhone.trim()) {
       setCheckoutError('Please fill in your name and phone number')
       return
@@ -292,6 +314,11 @@ export default function CheckoutPage() {
     <div style={styles.wrapper}>
       <div style={styles.stepBox}>
         <h2 style={styles.stepTitle}>Checkout</h2>
+        {!settings.acceptingOrders && (
+          <p style={styles.pausedBanner}>
+            We&apos;re not currently accepting orders online. Please check back soon, or message us on WhatsApp.
+          </p>
+        )}
         <div style={styles.checkoutLayout} className="order-details-layout">
           <div style={styles.formCol}>
             <h4 style={styles.sectionTitle}>Contact</h4>
@@ -329,7 +356,18 @@ export default function CheckoutPage() {
             </div>
 
             {shippingMethod === 'pickup' && (
-              <p style={styles.pickupNote}>📍 Pick up from: {STORE_ADDRESS}</p>
+              settings.pickupAddresses.length > 1 ? (
+                <label style={styles.label}>
+                  📍 Pick up from:
+                  <select value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} style={styles.input}>
+                    {settings.pickupAddresses.map((addr) => (
+                      <option key={addr} value={addr}>{addr}</option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <p style={styles.pickupNote}>📍 Pick up from: {pickupAddress}</p>
+              )
             )}
 
             {shippingMethod === 'delivery' && (
@@ -381,7 +419,12 @@ export default function CheckoutPage() {
 
             {checkoutError && <p style={styles.errorText}>{checkoutError}</p>}
 
-            <button type="button" style={{ ...styles.btnPrimary, width: '100%', display: 'block' }} disabled={submitting} onClick={handlePayAndPlaceOrder}>
+            <button
+              type="button"
+              style={{ ...styles.btnPrimary, width: '100%', display: 'block', ...(submitting || !settings.acceptingOrders ? styles.btnDisabled : {}) }}
+              disabled={submitting || !settings.acceptingOrders}
+              onClick={handlePayAndPlaceOrder}
+            >
               {submitting ? 'Processing…' : `Pay ₹${total}`}
             </button>
           </div>
@@ -457,6 +500,17 @@ const styles = {
     fontWeight: 700,
     margin: '0 0 20px',
     textAlign: 'center',
+  },
+  pausedBanner: {
+    background: '#FBF0DD',
+    color: '#7A4A12',
+    border: '1px solid #E4C588',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 13,
+    fontWeight: 600,
+    textAlign: 'center',
+    margin: '0 0 20px',
   },
   checkoutLayout: {
     display: 'grid',
@@ -605,6 +659,10 @@ const styles = {
     display: 'inline-block',
     textAlign: 'center',
     textDecoration: 'none',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
   },
   btnBack: {
     display: 'inline-block',

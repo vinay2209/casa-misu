@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 
 const MenuItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  category: { type: String, enum: ['tiramisu','cookies','desserts','gifting'], required: true },
+  // Free-form so the admin can create a brand new product category just by
+  // typing one when adding an item — no code change needed for a new range.
+  category: { type: String, required: true, trim: true },
   description: { type: String },
   price: { type: Number, required: true },
   // Each product can have one or more purchasable sizes/weights. `price`

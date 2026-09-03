@@ -3,6 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
 const dotenv = require('dotenv');
+const Settings = require('../models/Settings');
 dotenv.config();
 
 function getClient() {
@@ -18,6 +19,10 @@ function getClient() {
 // POST /api/payment/create-order  { amount: <rupees> }
 router.post('/create-order', async (req, res) => {
   try {
+    const settings = await Settings.findOne();
+    if (settings && settings.acceptingOrders === false) {
+      return res.status(503).json({ message: 'We are not currently accepting orders. Please check back soon.' });
+    }
     const client = getClient();
     if (!client) {
       return res.status(503).json({ message: 'Payment gateway is not configured yet' });

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import './HeroSection.css'
 import logo from '../assets/logo.png'
 import sketchCake from '../assets/sketch-cake.png'
@@ -6,7 +7,24 @@ import { homeHref, sectionHref, pagePath, galleryHref, navigateHome } from '../u
 
 const RUST = '#8B3A2A'
 
+function titleCase(str) {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 export default function HeroSection({ showBanner = true }) {
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    fetch('https://casa-misu.onrender.com/api/menu', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories([...new Set(data.map((item) => item.category).filter(Boolean))])
+        }
+      })
+      .catch((err) => console.error(err))
+  }, [])
+
   return (
     <header id={showBanner ? 'home' : undefined} className={`hero${showBanner ? '' : ' hero-compact'}`}>
       <div className="hero-stripes">
@@ -18,9 +36,9 @@ export default function HeroSection({ showBanner = true }) {
               <a href={sectionHref('menu')} className="nav-main-link">Menu</a>
               <div className="nav-dropdown" aria-hidden="true">
                 <a href={pagePath('?page=menu&category=all')}>All</a>
-                <a href={pagePath('?page=menu&category=tiramisu')}>Tiramisu</a>
-                <a href={pagePath('?page=menu&category=cookies')}>Cookies</a>
-                <a href={pagePath('?page=menu&category=desserts')}>Desserts</a>
+                {categories.map((c) => (
+                  <a key={c} href={pagePath(`?page=menu&category=${encodeURIComponent(c)}`)}>{titleCase(c)}</a>
+                ))}
               </div>
             </div>
 

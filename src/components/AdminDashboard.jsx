@@ -39,6 +39,9 @@ export default function AdminDashboard(){
   const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM)
   const [editingMenuItem, setEditingMenuItem] = useState(null)
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
+  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true })
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
 
   // Verify any saved token against the backend on mount so the dashboard
   // never sits blank — it always resolves to loading, login, or the dashboard.
@@ -66,7 +69,7 @@ export default function AdminDashboard(){
       })
   }, [])
 
-  useEffect(()=>{ if(token) fetchStats(); if(token) fetchOrders(); if(token) fetchMenu(); if(token) fetchGallery(); }, [token])
+  useEffect(()=>{ if(token) fetchStats(); if(token) fetchOrders(); if(token) fetchMenu(); if(token) fetchGallery(); if(token) fetchSettings(); }, [token])
 
   async function fetchStats(){
     try{
@@ -90,6 +93,34 @@ export default function AdminDashboard(){
       const data = await res.json()
       setGalleryImages(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
+  }
+  async function fetchSettings(){
+    try{
+      const res = await fetch('https://casa-misu.onrender.com/api/settings', { cache: 'no-store' })
+      const data = await res.json()
+      setSettings({
+        pickupAddresses: data.pickupAddresses?.length ? data.pickupAddresses : [''],
+        acceptingOrders: data.acceptingOrders !== false,
+      })
+    }catch(err){ console.error(err) }
+  }
+  async function saveSettings(){
+    setSettingsSaving(true)
+    setSettingsSaved(false)
+    try{
+      const body = {
+        pickupAddresses: settings.pickupAddresses.map(a => a.trim()).filter(Boolean),
+        acceptingOrders: settings.acceptingOrders,
+      }
+      await fetch('https://casa-misu.onrender.com/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      setSettingsSaved(true)
+      fetchSettings()
+    }catch(err){ console.error(err); alert('Could not save settings. Please try again.') }
+    finally{ setSettingsSaving(false) }
   }
 
   async function handleLogin(e){
@@ -380,10 +411,17 @@ export default function AdminDashboard(){
             </div>
           </div>
 
+          {!settings.acceptingOrders && (
+            <div style={{ background:'#FBF0DD', color:'#7A4A12', border:'1px solid #E4C588', borderRadius:8, padding:'10px 16px', marginBottom:16, fontWeight:600, fontSize:13 }}>
+              ⏸ Orders are currently paused on the website. Customers cannot check out. Go to Settings to turn them back on.
+            </div>
+          )}
+
           <div style={{ display:'flex', gap:10, marginBottom:24 }}>
             <button type="button" style={tabStyle('orders')} onClick={() => setActiveTab('orders')}>ORDERS</button>
             <button type="button" style={tabStyle('menu')} onClick={() => setActiveTab('menu')}>MENU</button>
             <button type="button" style={tabStyle('gallery')} onClick={() => setActiveTab('gallery')}>GALLERY</button>
+            <button type="button" style={tabStyle('settings')} onClick={() => setActiveTab('settings')}>SETTINGS</button>
           </div>
 
           {activeTab === 'orders' && (
@@ -459,16 +497,24 @@ export default function AdminDashboard(){
                 <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:12 }}>{editingMenuItem ? 'Edit menu item' : 'Add menu item'}</div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:10 }}>
                   <input value={menuForm.name} onChange={e=>setMenuForm({ ...menuForm, name:e.target.value })} placeholder="Name" required style={{ padding:8 }} />
-                  <select value={menuForm.category} onChange={e=>setMenuForm({ ...menuForm, category:e.target.value })} style={{ padding:8 }}>
-                    <option value="tiramisu">Tiramisu</option>
-                    <option value="cookies">Cookies</option>
-                    <option value="desserts">Desserts</option>
-                    <option value="gifting">Gifting</option>
-                  </select>
+                  <input
+                    value={menuForm.category}
+                    onChange={e=>setMenuForm({ ...menuForm, category:e.target.value })}
+                    placeholder="Category, e.g. Tiramisu"
+                    list="menu-categories"
+                    required
+                    style={{ padding:8 }}
+                  />
+                  <datalist id="menu-categories">
+                    {[...new Set(menuItems.map(m => m.category).filter(Boolean))].map(c => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
                   <input value={menuForm.description} onChange={e=>setMenuForm({ ...menuForm, description:e.target.value })} placeholder="Description" style={{ padding:8 }} />
                   <input value={menuForm.ingredients} onChange={e=>setMenuForm({ ...menuForm, ingredients:e.target.value })} placeholder="Ingredients (optional)" style={{ padding:8 }} />
                   <input value={menuForm.shelfLife} onChange={e=>setMenuForm({ ...menuForm, shelfLife:e.target.value })} placeholder="Shelf life (optional)" style={{ padding:8 }} />
                 </div>
+                <p style={{ fontSize:12, color:'#666', margin:'6px 0 0' }}>Pick an existing category from the list, or type a brand new one to start a new product range — it'll appear on the website automatically.</p>
 
                 <div style={{ marginTop:16 }}>
                   <div style={{ fontWeight:600, color:'#1B2E70', marginBottom:6 }}>Sizes / weights and prices</div>
@@ -618,6 +664,58 @@ export default function AdminDashboard(){
                 {galleryImages.length === 0 && (
                   <p style={{ gridColumn:'1 / -1', color:'#666', fontStyle:'italic' }}>No gallery images yet. Add one above.</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div>
+              <h3>Settings</h3>
+
+              <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>
+                <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:6 }}>Accepting orders</div>
+                <p style={{ fontSize:13, color:'#666', margin:'0 0 12px' }}>
+                  Turn this off to immediately stop customers from checking out — for example if you're fully booked, closed for a holiday, or need a break. The menu stays visible; only payment is blocked, with a message shown to customers.
+                </p>
+                <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.acceptingOrders}
+                    onChange={e => setSettings({ ...settings, acceptingOrders: e.target.checked })}
+                    style={{ width:18, height:18 }}
+                  />
+                  <span style={{ fontWeight:600, color: settings.acceptingOrders ? '#2F6B45' : '#8B3A2A' }}>
+                    {settings.acceptingOrders ? 'Currently accepting orders' : 'Currently NOT accepting orders'}
+                  </span>
+                </label>
+              </div>
+
+              <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>
+                <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:6 }}>Pickup location(s)</div>
+                <p style={{ fontSize:13, color:'#666', margin:'0 0 12px' }}>
+                  Shown to customers at checkout when they choose Store Pickup. Add more than one if you ever operate from multiple locations — customers will get to pick which one.
+                </p>
+                {settings.pickupAddresses.map((addr, index) => (
+                  <div key={index} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                    <input
+                      value={addr}
+                      onChange={e => setSettings({ ...settings, pickupAddresses: settings.pickupAddresses.map((a, i) => i === index ? e.target.value : a) })}
+                      placeholder="e.g. JP Decks, Goregaon East, Mumbai, Maharashtra 400097"
+                      style={{ padding:8, flex:1 }}
+                    />
+                    {settings.pickupAddresses.length > 1 && (
+                      <button type="button" onClick={() => setSettings({ ...settings, pickupAddresses: settings.pickupAddresses.filter((_, i) => i !== index) })} style={{ padding:'6px 10px' }}>Remove</button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setSettings({ ...settings, pickupAddresses: [...settings.pickupAddresses, ''] })} style={{ padding:'6px 10px' }}>+ Add another pickup location</button>
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <button type="button" onClick={saveSettings} disabled={settingsSaving} style={{ background:'#1B2E70', color:'#fff', padding:'10px 20px', borderRadius:999, border:'none', fontFamily:'Georgia, serif', fontWeight:600, cursor:'pointer' }}>
+                  {settingsSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+                {settingsSaved && <span style={{ color:'#2F6B45', fontWeight:600, fontSize:13 }}>✓ Saved</span>}
               </div>
             </div>
           )}

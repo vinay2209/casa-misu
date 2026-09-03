@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const Settings = require('../models/Settings');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
 const { protect } = require('../middleware/auth');
@@ -19,6 +20,11 @@ const transporter = nodemailer.createTransport({
 // POST /api/orders
 router.post('/', async (req, res) => {
   try {
+    const settings = await Settings.findOne();
+    if (settings && settings.acceptingOrders === false) {
+      return res.status(503).json({ success: false, message: 'We are not currently accepting orders. Please check back soon.' });
+    }
+
     const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount, deliveryType, address, deliveryDate, deliveryTimeSlot, orderType, transactionId, paymentMethod, deliveryFee, deliveryPincode, razorpayOrderId, razorpayPaymentId, paymentStatus } = req.body;
     const order = new Order({
       customerName,

@@ -13,6 +13,7 @@ const galleryRouter = require('./routes/gallery');
 const uploadRouter = require('./routes/upload');
 const deliveryRouter = require('./routes/delivery');
 const paymentRouter = require('./routes/payment');
+const settingsRouter = require('./routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,7 @@ app.use('/api/gallery', galleryRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/settings', settingsRouter);
 
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

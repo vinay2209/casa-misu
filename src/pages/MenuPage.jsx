@@ -42,8 +42,13 @@ export default function MenuPage() {
               category: item.category,
               title: item.name,
               desc: item.description || '',
-              price: `₹${item.price}`,
               image: item.image,
+              options: item.options,
+              dietaryOptions: item.dietaryOptions,
+              messageOnCake: item.messageOnCake,
+              ingredients: item.ingredients,
+              shelfLife: item.shelfLife,
+              isAvailable: item.isAvailable,
             }))
           )
         }
@@ -57,13 +62,14 @@ export default function MenuPage() {
   }, [])
 
   const filtered = products.filter(p => category === 'all' ? true : p.category === category)
+  const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))]
 
   return (
     <main className="site-body" style={{ padding: 36 }}>
       <SectionHeading title="OUR MENU" subtitle="Something sweet for every craving" />
 
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 18 }}>
-        {['all','tiramisu','cookies','desserts'].map(c => (
+      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 18, flexWrap: 'wrap' }}>
+        {categories.map(c => (
           <button key={c} onClick={() => setCategory(c)} style={{ padding: '8px 14px', borderRadius: 999, border: category===c ? 'none' : '1.5px solid var(--navy)', background: category===c ? 'var(--navy)' : 'transparent', color: category===c ? '#fff' : 'var(--navy)', fontWeight:600, letterSpacing:'0.08em' }}>{c.toUpperCase()}</button>
         ))}
       </div>
@@ -82,14 +88,18 @@ export default function MenuPage() {
               <h3>{p.title}</h3>
               <p className="featured-card-desc">{p.desc}</p>
               <div className="featured-card-footer">
-                <span className="featured-card-price">From ₹{minPriceForCategory(p.category)}</span>
-                <button
-                  type="button"
-                  className="btn-order-now"
-                  onClick={() => setSelectedProduct({ name: p.title, category: p.category, image: p.image })}
-                >
-                  SELECT OPTIONS
-                </button>
+                <span className="featured-card-price">From ₹{minimumProductPrice(p)}</span>
+                {p.isAvailable === false ? (
+                  <span style={{ display:'inline-block', color:'#8B3A2A', border:'1px solid #8B3A2A', borderRadius:999, padding:'8px 14px', fontFamily:'Georgia, serif', fontSize:12, fontWeight:700, letterSpacing:'0.06em' }}>OUT OF STOCK</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-order-now"
+                    onClick={() => setSelectedProduct({ name: p.title, category: p.category, image: p.image, options: p.options, dietaryOptions: p.dietaryOptions, messageOnCake: p.messageOnCake, isAvailable: p.isAvailable })}
+                  >
+                    SELECT OPTIONS
+                  </button>
+                )}
               </div>
             </div>
           </article>
@@ -101,4 +111,11 @@ export default function MenuPage() {
       )}
     </main>
   )
+}
+
+function minimumProductPrice(product) {
+  if (Array.isArray(product.options) && product.options.length > 0) {
+    return Math.min(...product.options.map((option) => Number(option.price)))
+  }
+  return minPriceForCategory(product.category)
 }
