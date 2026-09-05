@@ -27,7 +27,9 @@ export default function AdminDashboard(){
   const [activeTab, setActiveTab] = useState('orders')
   const [stats, setStats] = useState(null)
   const [orders, setOrders] = useState([])
+  const [allOrders, setAllOrders] = useState([])
   const [filter, setFilter] = useState('all')
+  const [customerSearch, setCustomerSearch] = useState('')
   const [menuItems, setMenuItems] = useState([])
   const [galleryImages, setGalleryImages] = useState([])
   const [galleryForm, setGalleryForm] = useState({ title: '', imageUrl: '', category: 'all' })
@@ -69,7 +71,7 @@ export default function AdminDashboard(){
       })
   }, [])
 
-  useEffect(()=>{ if(token) fetchStats(); if(token) fetchOrders(); if(token) fetchMenu(); if(token) fetchGallery(); if(token) fetchSettings(); }, [token])
+  useEffect(()=>{ if(token) fetchStats(); if(token) fetchOrders(); if(token) fetchAllOrders(); if(token) fetchMenu(); if(token) fetchGallery(); if(token) fetchSettings(); }, [token])
 
   async function fetchStats(){
     try{
@@ -82,6 +84,15 @@ export default function AdminDashboard(){
       const url = filter==='all' ? 'https://casa-misu.onrender.com/api/orders' : `https://casa-misu.onrender.com/api/orders?status=${filter}`
       const res = await fetch(url, { headers:{ Authorization: `Bearer ${token}` } })
       const data = await res.json(); setOrders(Array.isArray(data) ? data : [])
+    }catch(err){ console.error(err) }
+  }
+  // Always the full, unfiltered order list — used for the Customers tab so
+  // it stays correct regardless of whatever status filter is selected on
+  // the Orders tab.
+  async function fetchAllOrders(){
+    try{
+      const res = await fetch('https://casa-misu.onrender.com/api/orders', { headers:{ Authorization: `Bearer ${token}` } })
+      const data = await res.json(); setAllOrders(Array.isArray(data) ? data : [])
     }catch(err){ console.error(err) }
   }
   async function fetchMenu(){
@@ -139,16 +150,16 @@ export default function AdminDashboard(){
   async function updateOrderStatus(id, status){
     try{
       await fetch(`https://casa-misu.onrender.com/api/orders/${id}/status`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) })
-      fetchOrders(); fetchStats();
+      fetchOrders(); fetchStats(); fetchAllOrders();
     }catch(err){ console.error(err) }
   }
 
-  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`https://casa-misu.onrender.com/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); }catch(err){ console.error(err) } }
+  async function deleteOrder(id){ if(!confirm('Delete order?')) return; try{ await fetch(`https://casa-misu.onrender.com/api/orders/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); fetchOrders(); fetchStats(); fetchAllOrders(); }catch(err){ console.error(err) } }
 
   async function markPaymentVerified(id){
     try{
       await fetch(`https://casa-misu.onrender.com/api/orders/${id}/payment`, { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify({ paymentStatus: 'verified' }) })
-      fetchOrders()
+      fetchOrders(); fetchAllOrders();
     }catch(err){ console.error(err) }
   }
 
@@ -192,6 +203,33 @@ export default function AdminDashboard(){
     const bScheduled = b.orderType === 'scheduled' ? 0 : 1
     return aScheduled - bScheduled
   })
+
+  // Group every order by phone number (the last 10 digits, so +91/spacing
+  // differences don't split the same person into two rows) into a
+  // per-customer history, most-recently-active customer first.
+  const customers = (() => {
+    const byPhone = new Map()
+    for (const o of allOrders) {
+      const digits = String(o.customerPhone || '').replace(/\D/g, '').slice(-10)
+      const key = digits || `unknown-${o.customerName || 'customer'}`
+      if (!byPhone.has(key)) {
+        byPhone.set(key, { phone: o.customerPhone || '-', name: o.customerName || '-', orders: [], totalSpent: 0 })
+      }
+      const entry = byPhone.get(key)
+      entry.orders.push(o)
+      entry.name = o.customerName || entry.name
+      entry.totalSpent += Number(o.totalAmount) || 0
+    }
+    const list = [...byPhone.values()].map((c) => ({
+      ...c,
+      orders: c.orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      lastOrderAt: c.orders.reduce((latest, o) => Math.max(latest, new Date(o.createdAt).getTime()), 0),
+    }))
+    list.sort((a, b) => b.lastOrderAt - a.lastOrderAt)
+    const q = customerSearch.trim().toLowerCase()
+    if (!q) return list
+    return list.filter((c) => c.name.toLowerCase().includes(q) || c.phone.includes(q))
+  })()
 
   async function handleMenuImageUpload(e){
     const file = e.target.files[0]
@@ -421,6 +459,7 @@ export default function AdminDashboard(){
             <button type="button" style={tabStyle('orders')} onClick={() => setActiveTab('orders')}>ORDERS</button>
             <button type="button" style={tabStyle('menu')} onClick={() => setActiveTab('menu')}>MENU</button>
             <button type="button" style={tabStyle('gallery')} onClick={() => setActiveTab('gallery')}>GALLERY</button>
+            <button type="button" style={tabStyle('customers')} onClick={() => setActiveTab('customers')}>CUSTOMERS</button>
             <button type="button" style={tabStyle('settings')} onClick={() => setActiveTab('settings')}>SETTINGS</button>
           </div>
 
@@ -665,6 +704,54 @@ export default function AdminDashboard(){
                   <p style={{ gridColumn:'1 / -1', color:'#666', fontStyle:'italic' }}>No gallery images yet. Add one above.</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'customers' && (
+            <div>
+              <h3>Customers</h3>
+              <input
+                value={customerSearch}
+                onChange={e=>setCustomerSearch(e.target.value)}
+                placeholder="Search by name or phone"
+                style={{ padding:8, width:280, marginBottom:16 }}
+              />
+              {customers.length === 0 && (
+                <p style={{ color:'#666', fontStyle:'italic' }}>No customers found.</p>
+              )}
+              {customers.map((c) => (
+                <div key={c.phone} style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:14 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8, marginBottom:10 }}>
+                    <div>
+                      <div style={{ fontWeight:700, color:'#1B2E70', fontSize:15 }}>{c.name}</div>
+                      <div style={{ fontSize:13, color:'#666' }}>{c.phone}</div>
+                    </div>
+                    <div style={{ textAlign:'right', fontSize:13, color:'#666' }}>
+                      <div>{c.orders.length} order{c.orders.length !== 1 ? 's' : ''}</div>
+                      <div style={{ fontWeight:700, color:'#1B2E70' }}>₹{c.totalSpent} total</div>
+                    </div>
+                  </div>
+                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                    <thead>
+                      <tr style={{ textAlign:'left', borderBottom:'1px solid #ddd', fontSize:12, color:'#666' }}>
+                        <th>Date</th><th>Items</th><th>Amount</th><th>Payment Method</th><th>Payment Status</th><th>Order Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {c.orders.map((o) => (
+                        <tr key={o._id} style={{ borderBottom:'1px solid #f0f0f0', fontSize:13 }}>
+                          <td>{formatScheduledDate(o.createdAt)}</td>
+                          <td style={{ maxWidth:220 }}>{formatItemsWithSize(o.items)}</td>
+                          <td>{o.totalAmount != null ? `₹${o.totalAmount}` : '-'}</td>
+                          <td>{o.paymentMethod || '-'}</td>
+                          <td>{paymentStatusBadge(o.paymentStatus)}</td>
+                          <td>{o.status}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
             </div>
           )}
 

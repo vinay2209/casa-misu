@@ -29,3 +29,7 @@ export function sectionHref(hash) {
 export function galleryHref() {
   return pagePath('?page=gallery')
 }
+
+export function myOrdersHref() {
+  return pagePath('?page=orders')
+}

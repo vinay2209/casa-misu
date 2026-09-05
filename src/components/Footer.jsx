@@ -1,6 +1,6 @@
 import './Footer.css'
 import floralSketch from '../assets/floral-maroon.svg'
-import { homeHref, sectionHref, pagePath, galleryHref, navigateHome } from '../utils/navLinks'
+import { homeHref, sectionHref, pagePath, galleryHref, myOrdersHref, navigateHome } from '../utils/navLinks'
 
 function WhatsAppIcon() {
   return (
@@ -37,6 +37,7 @@ export default function Footer() {
             <li><a href={sectionHref('menu')}>Menu</a></li>
             <li><a href={pagePath('about.html')}>About Us</a></li>
             <li><a href={galleryHref()}>Gallery</a></li>
+            <li><a href={myOrdersHref()}>My Orders</a></li>
             <li><a href={sectionHref('faq')}>FAQ</a></li>
             <li><a href={sectionHref('contact')}>Contact</a></li>
           </ul>

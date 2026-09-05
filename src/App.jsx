@@ -11,6 +11,7 @@ import MenuPage from './pages/MenuPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CheckoutPage from './pages/CheckoutPage'
 import GalleryPage from './pages/GalleryPage'
+import MyOrdersPage from './pages/MyOrdersPage'
 
 export default function App() {
   const params = typeof window !== 'undefined'
@@ -24,6 +25,7 @@ export default function App() {
   const isProductPage = params.get('page') === 'product'
   const isCheckoutPage = params.get('page') === 'checkout'
   const isGalleryPage = params.get('page') === 'gallery'
+  const isMyOrdersPage = params.get('page') === 'orders'
 
   if (isAdmin) {
     return <AdminDashboard />
@@ -36,6 +38,20 @@ export default function App() {
         <HeroSection showBanner={false} />
         <div className="site-body">
           <GalleryPage />
+          <Footer />
+        </div>
+        <CartDrawer />
+      </div>
+    )
+  }
+
+  if (isMyOrdersPage) {
+    return (
+      <div className="site-page">
+        <AnnouncementBar />
+        <HeroSection showBanner={false} />
+        <div className="site-body">
+          <MyOrdersPage />
           <Footer />
         </div>
         <CartDrawer />

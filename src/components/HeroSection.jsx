@@ -3,7 +3,7 @@ import './HeroSection.css'
 import logo from '../assets/logo.png'
 import sketchCake from '../assets/sketch-cake.png'
 import sketchMix from '../assets/sketch-mix.png'
-import { homeHref, sectionHref, pagePath, galleryHref, navigateHome } from '../utils/navLinks'
+import { homeHref, sectionHref, pagePath, galleryHref, myOrdersHref, navigateHome } from '../utils/navLinks'
 
 const RUST = '#8B3A2A'
 
@@ -59,6 +59,7 @@ export default function HeroSection({ showBanner = true }) {
             {['FAQ', 'Contact'].map((l) => (
               <a key={l} href={sectionHref(l.toLowerCase())}>{l}</a>
             ))}
+            <a href={myOrdersHref()}>My Orders</a>
             <button
               type="button"
               className="hero-cart"

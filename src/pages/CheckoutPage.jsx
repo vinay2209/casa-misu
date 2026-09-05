@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { STORE_ADDRESS, DELIVERY_FEE } from '../constants/store'
 import { getCart, updateQuantity, removeFromCart, clearCart } from '../utils/cartStore'
+import { rememberCustomerPhone } from '../utils/customerPhone'
 
 const API_BASE = 'https://casa-misu.onrender.com'
 const NAVY = '#1B2E70'
@@ -175,6 +176,7 @@ export default function CheckoutPage() {
       })
       const data = await res.json()
       if (data.success) {
+        rememberCustomerPhone(form.customerPhone)
         clearCart()
         setDone(true)
       } else {

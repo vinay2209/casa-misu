@@ -73,6 +73,26 @@ router.post('/', async (req, res) => {
   }
 });
 
+// GET /api/orders/mine?phone=... — public, no login. Phone number is the
+// only identifier (as agreed: no mandatory account), matched on the last
+// 10 digits so it doesn't matter whether +91 / spaces / dashes were typed.
+router.get('/mine', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+    const digits = String(req.query.phone || '').replace(/\D/g, '');
+    if (digits.length < 10) {
+      return res.status(400).json({ message: 'Enter a valid phone number' });
+    }
+    const last10 = digits.slice(-10);
+    const orders = await Order.find().sort({ createdAt: -1 });
+    const mine = orders.filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === last10);
+    return res.json(mine);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // GET /api/orders (protected)
 router.get('/', protect, async (req, res) => {
   try {
