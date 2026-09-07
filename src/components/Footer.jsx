@@ -55,9 +55,7 @@ export default function Footer() {
         <div className="footer-col footer-center">
           <p className="footer-location">📍 Goregaon, Mumbai</p>
           <p className="footer-fssai">
-            <a className="footer-fssai-link" href={pagePath('fssai-license.pdf')} target="_blank" rel="noopener noreferrer">
-              ✓ FSSAI Registered · 21526009000496
-            </a>
+            <span className="footer-fssai-link">✓ FSSAI Registered · 21526009000496</span>
           </p>
         </div>
 
