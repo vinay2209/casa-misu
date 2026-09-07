@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'https://vinay2209.github.io'] }));
+app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174', 'https://vinay2209.github.io', 'https://casamisu.co.in', 'https://www.casamisu.co.in'] }));
 app.use(express.json());
 
 app.use('/api/orders', ordersRouter);
