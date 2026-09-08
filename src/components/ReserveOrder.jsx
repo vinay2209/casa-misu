@@ -38,7 +38,7 @@ export default function ReserveOrder() {
         <div className="reserve-content">
           <h2>RESERVE YOUR ORDER</h2>
           <span className="reserve-heart" aria-hidden="true">♡</span>
-          <p>DM us on Instagram or WhatsApp For custom cakes, party orders &amp; corporate gifting</p>
+          <p>DM us on Instagram or WhatsApp for custom cakes, party orders &amp; corporate gifting</p>
           <div className="reserve-buttons">
             <a href="https://wa.me/message/PZKEKYNNK527M1" className="reserve-btn" target="_blank" rel="noopener noreferrer">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
