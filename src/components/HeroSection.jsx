@@ -56,9 +56,8 @@ export default function HeroSection({ showBanner = true }) {
 
           <div className="hero-nav-links hero-nav-right">
             <a href={sectionHref('menu')}>Order</a>
-            {['FAQ', 'Contact'].map((l) => (
-              <a key={l} href={sectionHref(l.toLowerCase())}>{l}</a>
-            ))}
+            <a href={sectionHref('faq')}>FAQ<span style={{ textTransform: 'lowercase' }}>&apos;s</span></a>
+            <a href={sectionHref('contact')}>Contact</a>
             <a href={myOrdersHref()}>My Orders</a>
             <button
               type="button"

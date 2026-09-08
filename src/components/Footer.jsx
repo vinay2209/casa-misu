@@ -38,7 +38,7 @@ export default function Footer() {
             <li><a href={pagePath('about.html')}>About Us</a></li>
             <li><a href={galleryHref()}>Gallery</a></li>
             <li><a href={myOrdersHref()}>My Orders</a></li>
-            <li><a href={sectionHref('faq')}>FAQ</a></li>
+            <li><a href={sectionHref('faq')}>FAQ&apos;s</a></li>
             <li><a href={sectionHref('contact')}>Contact</a></li>
           </ul>
         </div>
