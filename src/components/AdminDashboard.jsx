@@ -19,6 +19,7 @@ const EMPTY_MENU_FORM = {
   shelfLife: '',
   isFeatured: false,
   onSale: false,
+  saleDiscountPercent: '',
 }
 
 export default function AdminDashboard(){
@@ -295,6 +296,7 @@ export default function AdminDashboard(){
       shelfLife: item.shelfLife || '',
       isFeatured: Boolean(item.isFeatured),
       onSale: Boolean(item.onSale),
+      saleDiscountPercent: item.saleDiscountPercent ? String(item.saleDiscountPercent) : '',
     })
     setMenuImageUrl(item.image || '')
     setMenuImagePreview(item.image || '')
@@ -312,6 +314,7 @@ export default function AdminDashboard(){
       options,
       price: options[0].price,
       image: menuImageUrl,
+      saleDiscountPercent: Number(menuForm.saleDiscountPercent) || 0,
     }
     try{
       const url = editingMenuItem ? `https://casa-misu.onrender.com/api/menu/${editingMenuItem._id}` : 'https://casa-misu.onrender.com/api/menu'
@@ -596,6 +599,20 @@ export default function AdminDashboard(){
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.messageOnCake} onChange={e=>setMenuForm({ ...menuForm, messageOnCake:e.target.checked })} /> Allow topper option (+₹10)</label>
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.isFeatured} onChange={e=>setMenuForm({ ...menuForm, isFeatured:e.target.checked })} /> Featured</label>
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.onSale} onChange={e=>setMenuForm({ ...menuForm, onSale:e.target.checked })} /> On Sale</label>
+                  {menuForm.onSale && (
+                    <label style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={menuForm.saleDiscountPercent}
+                        onChange={e=>setMenuForm({ ...menuForm, saleDiscountPercent:e.target.value })}
+                        placeholder="15"
+                        style={{ padding:6, width:64 }}
+                      />
+                      <span style={{ fontSize:13 }}>% off</span>
+                    </label>
+                  )}
                   <button style={{ background:'#1B2E70', color:'#fff', padding:'8px 14px', borderRadius:6 }}>{editingMenuItem ? 'Save changes' : 'Add item'}</button>
                   {editingMenuItem && <button type="button" onClick={resetMenuForm} style={{ padding:'8px 14px' }}>Cancel</button>}
                 </div>
@@ -807,7 +824,7 @@ export default function AdminDashboard(){
               <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>
                 <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:6 }}>Site-wide sale</div>
                 <p style={{ fontSize:13, color:'#666', margin:'0 0 12px' }}>
-                  Puts every product on sale at once, at the discount below. Applies only to product prices — never to the delivery fee or the cake-topper add-on. To put just one or two specific products on sale instead, use the "On Sale" checkbox on that product in the Menu tab (it uses this same discount percentage).
+                  Puts every product on sale at once, at the discount below, overriding any individual product discounts while it's on. Applies only to product prices — never to the delivery fee or the cake-topper add-on. To put just one or two specific products on sale instead (each at its own percentage), leave this off and use the "On Sale" checkbox on that product in the Menu tab.
                 </p>
                 <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer', marginBottom:12 }}>
                   <input

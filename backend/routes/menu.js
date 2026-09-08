@@ -4,16 +4,19 @@ const MenuItem = require('../models/MenuItem');
 const Settings = require('../models/Settings');
 const { protect } = require('../middleware/auth');
 
-// Attaches a `discountPercent` to each item — 0 unless the site-wide sale
-// is on or the item itself is individually on sale, in which case it's
-// the shared sale percentage. Computed here, once, so every page that
-// reads /api/menu shows the same price without duplicating this logic.
+// Attaches a `discountPercent` to each item, computed here once so every
+// page that reads /api/menu shows the same price without duplicating this
+// logic. The site-wide sale (Settings) wins when it's on, applying the
+// same percent to every product; otherwise each item uses its own
+// saleDiscountPercent if it's individually marked onSale.
 async function withDiscount(items) {
   const settings = await Settings.findOne();
-  const pct = settings?.saleActive ? Number(settings.saleDiscountPercent) || 0 : 0;
+  const sitewidePct = settings?.saleActive ? Number(settings.saleDiscountPercent) || 0 : 0;
   return items.map((item) => {
     const obj = item.toObject ? item.toObject() : item;
-    const discountPercent = pct > 0 ? pct : (item.onSale ? Number(settings?.saleDiscountPercent) || 0 : 0);
+    const discountPercent = sitewidePct > 0
+      ? sitewidePct
+      : (item.onSale ? Number(item.saleDiscountPercent) || 0 : 0);
     return { ...obj, discountPercent };
   });
 }
