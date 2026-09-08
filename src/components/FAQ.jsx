@@ -38,7 +38,7 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="faq-section">
-      <SectionHeading title={<>FAQ<span style={{ textTransform: 'lowercase' }}>&apos;s</span></>} subtitle="Everything you need to know before you order" />
+      <SectionHeading title={<>FAQ<span style={{ textTransform: 'lowercase' }}>s</span></>} subtitle="Everything you need to know before you order" />
       <div className="faq-list">
         {FAQS.map((item, i) => {
           const isOpen = openIndex === i
