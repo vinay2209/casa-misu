@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { getCart, updateQuantity, removeFromCart } from '../utils/cartStore'
 
+const API_BASE = 'https://casa-misu.onrender.com'
 const NAVY = '#1B2E70'
 const RUST = '#8B3A2A'
+const DEFAULT_PAUSED_MESSAGE = "We're not currently accepting orders online. Please check back soon."
 
 export default function CartDrawer() {
   const [open, setOpen] = useState(false)
   const [cart, setCart] = useState({})
+  const [acceptingOrders, setAcceptingOrders] = useState(true)
+  const [pausedMessage, setPausedMessage] = useState('')
 
   useEffect(() => {
     setCart(getCart())
@@ -23,6 +27,16 @@ export default function CartDrawer() {
       window.removeEventListener('casamisu:cart-changed', refresh)
       window.removeEventListener('casamisu:open-cart', openDrawer)
     }
+  }, [])
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        setAcceptingOrders(data.acceptingOrders !== false)
+        setPausedMessage(data.pausedMessage || '')
+      })
+      .catch((err) => console.error(err))
   }, [])
 
   const items = Object.values(cart).filter((c) => c.quantity > 0)
@@ -47,6 +61,9 @@ export default function CartDrawer() {
         </div>
 
         <div style={styles.body}>
+          {!acceptingOrders && (
+            <p style={styles.pausedBanner}>{pausedMessage || DEFAULT_PAUSED_MESSAGE}</p>
+          )}
           {items.length === 0 ? (
             <p style={{ color: '#666', fontStyle: 'italic' }}>Your cart is empty</p>
           ) : (
@@ -93,8 +110,13 @@ export default function CartDrawer() {
               <span>Subtotal</span>
               <span style={{ color: RUST, fontWeight: 700 }}>₹{total}</span>
             </div>
-            <button type="button" style={styles.checkoutBtn} onClick={goToCheckout}>
-              Checkout
+            <button
+              type="button"
+              style={{ ...styles.checkoutBtn, ...(acceptingOrders ? {} : styles.checkoutBtnDisabled) }}
+              onClick={goToCheckout}
+              disabled={!acceptingOrders}
+            >
+              {acceptingOrders ? 'Checkout' : 'Orders Paused'}
             </button>
             <button type="button" style={styles.continueBtn} onClick={() => setOpen(false)}>
               Continue Shopping
@@ -155,6 +177,17 @@ const styles = {
     flex: 1,
     overflowY: 'auto',
     padding: '12px 20px',
+  },
+  pausedBanner: {
+    background: '#FBF0DD',
+    color: '#7A4A12',
+    border: '1px solid #E4C588',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 12,
+    fontWeight: 600,
+    lineHeight: 1.5,
+    margin: '0 0 14px',
   },
   item: {
     display: 'flex',
@@ -260,6 +293,10 @@ const styles = {
     textTransform: 'uppercase',
     cursor: 'pointer',
     marginBottom: 8,
+  },
+  checkoutBtnDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
   },
   continueBtn: {
     width: '100%',

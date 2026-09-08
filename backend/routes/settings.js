@@ -37,6 +37,9 @@ router.put('/', protect, async (req, res) => {
     if (typeof req.body.acceptingOrders === 'boolean') {
       settings.acceptingOrders = req.body.acceptingOrders;
     }
+    if (typeof req.body.pausedMessage === 'string') {
+      settings.pausedMessage = req.body.pausedMessage.trim();
+    }
     await settings.save();
     res.json(settings);
   } catch (err) {

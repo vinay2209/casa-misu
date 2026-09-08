@@ -41,7 +41,7 @@ export default function AdminDashboard(){
   const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM)
   const [editingMenuItem, setEditingMenuItem] = useState(null)
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
-  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true })
+  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true, pausedMessage: '' })
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
@@ -112,6 +112,7 @@ export default function AdminDashboard(){
       setSettings({
         pickupAddresses: data.pickupAddresses?.length ? data.pickupAddresses : [''],
         acceptingOrders: data.acceptingOrders !== false,
+        pausedMessage: data.pausedMessage || '',
       })
     }catch(err){ console.error(err) }
   }
@@ -122,6 +123,7 @@ export default function AdminDashboard(){
       const body = {
         pickupAddresses: settings.pickupAddresses.map(a => a.trim()).filter(Boolean),
         acceptingOrders: settings.acceptingOrders,
+        pausedMessage: settings.pausedMessage,
       }
       await fetch('https://casa-misu.onrender.com/api/settings', {
         method: 'PUT',
@@ -775,6 +777,21 @@ export default function AdminDashboard(){
                     {settings.acceptingOrders ? 'Currently accepting orders' : 'Currently NOT accepting orders'}
                   </span>
                 </label>
+
+                <div style={{ marginTop:16, paddingTop:16, borderTop:'1px solid rgba(27,46,112,0.15)' }}>
+                  <label style={{ display:'block', fontSize:13, fontWeight:600, color:'#1B2E70', marginBottom:6 }}>
+                    Message shown to customers while paused
+                  </label>
+                  <textarea
+                    value={settings.pausedMessage}
+                    onChange={e => setSettings({ ...settings, pausedMessage: e.target.value })}
+                    placeholder="e.g. We're currently closed for a short break and back to taking orders on 12th September. Thank you for your patience!"
+                    style={{ width:'100%', minHeight:70, padding:8, fontFamily:'Georgia, serif', fontSize:13, boxSizing:'border-box' }}
+                  />
+                  <p style={{ fontSize:12, color:'#666', margin:'6px 0 0' }}>
+                    Shown at the top of the cart and at checkout whenever "Accepting orders" is off. Leave blank to use a default message.
+                  </p>
+                </div>
               </div>
 
               <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>

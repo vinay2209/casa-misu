@@ -96,7 +96,7 @@ export default function CheckoutPage() {
   const [schedule, setSchedule] = useState({ orderType: 'asap', deliveryDate: '', deliveryTimeSlot: '' })
   const [checkoutError, setCheckoutError] = useState('')
   const [form, setForm] = useState({ customerName: '', customerPhone: '', customerEmail: '', address: '', specialRequests: '' })
-  const [settings, setSettings] = useState({ pickupAddresses: [], acceptingOrders: true })
+  const [settings, setSettings] = useState({ pickupAddresses: [], acceptingOrders: true, pausedMessage: '' })
   const [pickupAddress, setPickupAddress] = useState('')
 
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
         const addresses = Array.isArray(data.pickupAddresses) && data.pickupAddresses.length > 0
           ? data.pickupAddresses
           : [STORE_ADDRESS]
-        setSettings({ pickupAddresses: addresses, acceptingOrders: data.acceptingOrders !== false })
+        setSettings({ pickupAddresses: addresses, acceptingOrders: data.acceptingOrders !== false, pausedMessage: data.pausedMessage || '' })
         setPickupAddress(addresses[0])
       })
       .catch((err) => {
@@ -318,7 +318,7 @@ export default function CheckoutPage() {
         <h2 style={styles.stepTitle}>Checkout</h2>
         {!settings.acceptingOrders && (
           <p style={styles.pausedBanner}>
-            We&apos;re not currently accepting orders online. Please check back soon, or message us on WhatsApp.
+            {settings.pausedMessage || "We're not currently accepting orders online. Please check back soon, or message us on WhatsApp."}
           </p>
         )}
         <div style={styles.checkoutLayout} className="order-details-layout">
