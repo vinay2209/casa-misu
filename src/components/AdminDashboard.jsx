@@ -18,6 +18,7 @@ const EMPTY_MENU_FORM = {
   ingredients: '',
   shelfLife: '',
   isFeatured: false,
+  onSale: false,
 }
 
 export default function AdminDashboard(){
@@ -41,7 +42,7 @@ export default function AdminDashboard(){
   const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM)
   const [editingMenuItem, setEditingMenuItem] = useState(null)
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
-  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true, pausedMessage: '' })
+  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true, pausedMessage: '', saleActive: false, saleDiscountPercent: '' })
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
@@ -113,6 +114,8 @@ export default function AdminDashboard(){
         pickupAddresses: data.pickupAddresses?.length ? data.pickupAddresses : [''],
         acceptingOrders: data.acceptingOrders !== false,
         pausedMessage: data.pausedMessage || '',
+        saleActive: Boolean(data.saleActive),
+        saleDiscountPercent: data.saleDiscountPercent || '',
       })
     }catch(err){ console.error(err) }
   }
@@ -124,6 +127,8 @@ export default function AdminDashboard(){
         pickupAddresses: settings.pickupAddresses.map(a => a.trim()).filter(Boolean),
         acceptingOrders: settings.acceptingOrders,
         pausedMessage: settings.pausedMessage,
+        saleActive: settings.saleActive,
+        saleDiscountPercent: Number(settings.saleDiscountPercent) || 0,
       }
       await fetch('https://casa-misu.onrender.com/api/settings', {
         method: 'PUT',
@@ -289,6 +294,7 @@ export default function AdminDashboard(){
       ingredients: item.ingredients || '',
       shelfLife: item.shelfLife || '',
       isFeatured: Boolean(item.isFeatured),
+      onSale: Boolean(item.onSale),
     })
     setMenuImageUrl(item.image || '')
     setMenuImagePreview(item.image || '')
@@ -589,13 +595,14 @@ export default function AdminDashboard(){
                   </div>
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.messageOnCake} onChange={e=>setMenuForm({ ...menuForm, messageOnCake:e.target.checked })} /> Allow topper option (+₹10)</label>
                   <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.isFeatured} onChange={e=>setMenuForm({ ...menuForm, isFeatured:e.target.checked })} /> Featured</label>
+                  <label style={{ display:'flex', alignItems:'center', gap:6 }}><input type="checkbox" checked={menuForm.onSale} onChange={e=>setMenuForm({ ...menuForm, onSale:e.target.checked })} /> On Sale</label>
                   <button style={{ background:'#1B2E70', color:'#fff', padding:'8px 14px', borderRadius:6 }}>{editingMenuItem ? 'Save changes' : 'Add item'}</button>
                   {editingMenuItem && <button type="button" onClick={resetMenuForm} style={{ padding:'8px 14px' }}>Cancel</button>}
                 </div>
               </form>
 
               <table style={{ width:'100%', borderCollapse:'collapse' }}>
-                <thead><tr style={{ borderBottom:'1px solid #ddd' }}><th>Name</th><th>Category</th><th>Sizes / prices</th><th>Dietary</th><th>Available</th><th>Actions</th></tr></thead>
+                <thead><tr style={{ borderBottom:'1px solid #ddd' }}><th>Name</th><th>Category</th><th>Sizes / prices</th><th>Dietary</th><th>Sale</th><th>Available</th><th>Actions</th></tr></thead>
                 <tbody>
                   {menuItems.map(m=> (
                     <tr key={m._id} style={{ borderBottom:'1px solid #f0f0f0' }}>
@@ -603,6 +610,9 @@ export default function AdminDashboard(){
                       <td>{m.category}</td>
                       <td>{m.options?.length ? m.options.map(option => `${option.label} — ₹${option.price}`).join(', ') : `₹${m.price}`}</td>
                       <td>{m.dietaryOptions?.length ? m.dietaryOptions.join(', ') : 'Contains Egg, Eggless'}</td>
+                      <td>{m.discountPercent > 0 ? (
+                        <span style={{ background:'#8B3A2A', color:'#fff', padding:'3px 10px', borderRadius:999, fontSize:11, fontWeight:600, whiteSpace:'nowrap' }}>{m.discountPercent}% OFF</span>
+                      ) : (m.onSale ? <span style={{ fontSize:11, color:'#999' }}>On Sale (percent not set)</span> : '-')}</td>
                       <td><button onClick={()=>toggleAvailability(m._id)} style={{ padding:6 }}>{m.isAvailable ? 'In stock' : 'Out of stock'}</button></td>
                       <td><div style={{ display:'flex', gap:6 }}><button onClick={()=>editMenuItem(m)} style={{ padding:'6px 8px' }}>Edit</button><button onClick={()=>deleteMenuItem(m._id)} style={{ background:'#8B3A2A', color:'#fff', padding:'6px 8px', borderRadius:6 }}>Delete</button></div></td>
                     </tr>
@@ -792,6 +802,37 @@ export default function AdminDashboard(){
                     Shown at the top of the cart and at checkout whenever "Accepting orders" is off. Leave blank to use a default message.
                   </p>
                 </div>
+              </div>
+
+              <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>
+                <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:6 }}>Site-wide sale</div>
+                <p style={{ fontSize:13, color:'#666', margin:'0 0 12px' }}>
+                  Puts every product on sale at once, at the discount below. Applies only to product prices — never to the delivery fee or the cake-topper add-on. To put just one or two specific products on sale instead, use the "On Sale" checkbox on that product in the Menu tab (it uses this same discount percentage).
+                </p>
+                <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer', marginBottom:12 }}>
+                  <input
+                    type="checkbox"
+                    checked={settings.saleActive}
+                    onChange={e => setSettings({ ...settings, saleActive: e.target.checked })}
+                    style={{ width:18, height:18 }}
+                  />
+                  <span style={{ fontWeight:600, color: settings.saleActive ? '#8B3A2A' : '#666' }}>
+                    {settings.saleActive ? 'Sale is ON for all products' : 'Sale is off'}
+                  </span>
+                </label>
+                <label style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontSize:13, fontWeight:600, color:'#1B2E70' }}>Discount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={settings.saleDiscountPercent}
+                    onChange={e => setSettings({ ...settings, saleDiscountPercent: e.target.value })}
+                    placeholder="20"
+                    style={{ padding:8, width:80 }}
+                  />
+                  <span style={{ fontSize:13, color:'#666' }}>%</span>
+                </label>
               </div>
 
               <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>

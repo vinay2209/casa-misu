@@ -1,7 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const MenuItem = require('../models/MenuItem');
+const Settings = require('../models/Settings');
 const { protect } = require('../middleware/auth');
+
+// Attaches a `discountPercent` to each item — 0 unless the site-wide sale
+// is on or the item itself is individually on sale, in which case it's
+// the shared sale percentage. Computed here, once, so every page that
+// reads /api/menu shows the same price without duplicating this logic.
+async function withDiscount(items) {
+  const settings = await Settings.findOne();
+  const pct = settings?.saleActive ? Number(settings.saleDiscountPercent) || 0 : 0;
+  return items.map((item) => {
+    const obj = item.toObject ? item.toObject() : item;
+    const discountPercent = pct > 0 ? pct : (item.onSale ? Number(settings?.saleDiscountPercent) || 0 : 0);
+    return { ...obj, discountPercent };
+  });
+}
 
 // GET /api/menu
 router.get('/', async (req, res) => {
@@ -10,7 +25,7 @@ router.get('/', async (req, res) => {
     const category = req.query.category;
     const query = category ? { category } : {};
     const items = await MenuItem.find(query).sort({ createdAt: -1 });
-    res.json(items);
+    res.json(await withDiscount(items));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
@@ -22,7 +37,7 @@ router.get('/featured', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
     const items = await MenuItem.find({ isFeatured: true });
-    res.json(items);
+    res.json(await withDiscount(items));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });

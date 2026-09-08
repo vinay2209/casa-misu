@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { sizesForCategory } from '../constants/sizeOptions'
+import { applyDiscount } from '../utils/sale'
 
 const NAVY = '#1B2E70'
+const RUST = '#8B3A2A'
 const TOPPER_FEE = 10
 const TOPPER_OPTIONS = ['Happy Birthday', 'Happy Anniversary']
 
@@ -17,7 +19,11 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
   const [topper, setTopper] = useState('')
   const [quantity, setQuantity] = useState(1)
 
-  const unitPrice = size.price + (topper ? TOPPER_FEE : 0)
+  // Sale discount applies to the product's price only — never to the
+  // topper add-on or (elsewhere) the delivery fee.
+  const discountedSizePrice = applyDiscount(size.price, product.discountPercent)
+  const onSale = discountedSizePrice < size.price
+  const unitPrice = discountedSizePrice + (topper ? TOPPER_FEE : 0)
 
   if (product.isAvailable === false) {
     return <p style={styles.outOfStock}>This product is currently out of stock.</p>
@@ -37,7 +43,15 @@ export default function ProductOptionsForm({ product, onAdd, submitLabel = 'Add 
 
   return (
     <div style={styles.wrap}>
-      <p style={styles.price}>₹{unitPrice}</p>
+      {onSale ? (
+        <p style={styles.price}>
+          <span style={styles.priceStrike}>₹{size.price + (topper ? TOPPER_FEE : 0)}</span>
+          ₹{unitPrice}
+          <span style={styles.saleBadge}>{product.discountPercent}% OFF</span>
+        </p>
+      ) : (
+        <p style={styles.price}>₹{unitPrice}</p>
+      )}
 
       <div style={styles.field}>
         <span style={styles.label}>{sizes.length === 1 ? 'Size' : `Weight: ${size.label}`}</span>
@@ -139,6 +153,26 @@ const styles = {
     fontSize: 26,
     color: NAVY,
     margin: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  priceStrike: {
+    color: '#999',
+    fontWeight: 500,
+    fontSize: 16,
+    textDecoration: 'line-through',
+  },
+  saleBadge: {
+    background: RUST,
+    color: '#fff',
+    fontFamily: 'Georgia, serif',
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    padding: '3px 9px',
+    borderRadius: 999,
   },
   outOfStock: {
     color: '#8B3A2A',

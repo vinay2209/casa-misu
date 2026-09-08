@@ -4,6 +4,7 @@ import './OrderButtons.css'
 import SectionHeading from './SectionHeading'
 import ProductOptionsModal from './ProductOptionsModal'
 import { minPriceForCategory } from '../constants/sizeOptions'
+import { applyDiscount } from '../utils/sale'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
@@ -47,6 +48,7 @@ export default function Menu() {
               ingredients: item.ingredients,
               shelfLife: item.shelfLife,
               isAvailable: item.isAvailable,
+              discountPercent: item.discountPercent,
             }))
           )
         }
@@ -82,7 +84,15 @@ export default function Menu() {
             )}
             <div className="menu-product-body">
               <h3>{p.name}</h3>
-              <p className="menu-product-price">From ₹{minimumProductPrice(p)}</p>
+              {p.discountPercent > 0 ? (
+                <p className="menu-product-price">
+                  From <span className="menu-product-price-strike">₹{minimumProductPrice(p)}</span>
+                  ₹{applyDiscount(minimumProductPrice(p), p.discountPercent)}
+                  <span className="menu-product-sale-badge">{p.discountPercent}% OFF</span>
+                </p>
+              ) : (
+                <p className="menu-product-price">From ₹{minimumProductPrice(p)}</p>
+              )}
               {p.isAvailable === false ? (
                 <span className="menu-product-out-of-stock">OUT OF STOCK</span>
               ) : (

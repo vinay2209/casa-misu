@@ -40,6 +40,15 @@ router.put('/', protect, async (req, res) => {
     if (typeof req.body.pausedMessage === 'string') {
       settings.pausedMessage = req.body.pausedMessage.trim();
     }
+    if (typeof req.body.saleActive === 'boolean') {
+      settings.saleActive = req.body.saleActive;
+    }
+    if (req.body.saleDiscountPercent !== undefined) {
+      const pct = Number(req.body.saleDiscountPercent);
+      if (Number.isFinite(pct)) {
+        settings.saleDiscountPercent = Math.min(100, Math.max(0, pct));
+      }
+    }
     await settings.save();
     res.json(settings);
   } catch (err) {

@@ -90,6 +90,28 @@
   color: #8B3A2A;
   font-size: 15px;
   margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.menu-product-price-strike {
+  color: #999;
+  font-weight: 500;
+  font-size: 12px;
+  text-decoration: line-through;
+}
+
+.menu-product-sale-badge {
+  background: #8B3A2A;
+  color: #fff;
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
 }
 
 .menu-product-out-of-stock {

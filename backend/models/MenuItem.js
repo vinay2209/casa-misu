@@ -20,6 +20,9 @@ const MenuItemSchema = new mongoose.Schema({
   image: { type: String },
   isAvailable: { type: Boolean, default: true },
   isFeatured: { type: Boolean, default: false },
+  // Puts just this product on sale (at the site's shared discount
+  // percent) independent of the site-wide sale switch.
+  onSale: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 

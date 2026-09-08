@@ -4,6 +4,7 @@ import '../components/OrderButtons.css'
 import SectionHeading from '../components/SectionHeading'
 import ProductOptionsModal from '../components/ProductOptionsModal'
 import { minPriceForCategory } from '../constants/sizeOptions'
+import { applyDiscount } from '../utils/sale'
 import tiramisuIcon from '../assets/tiramisu-maroon.svg'
 import cookieIcon from '../assets/cookie-maroon.svg'
 import cakeIcon from '../assets/cake-maroon.svg'
@@ -49,6 +50,7 @@ export default function MenuPage() {
               ingredients: item.ingredients,
               shelfLife: item.shelfLife,
               isAvailable: item.isAvailable,
+              discountPercent: item.discountPercent,
             }))
           )
         }
@@ -88,14 +90,22 @@ export default function MenuPage() {
               <h3>{p.title}</h3>
               <p className="featured-card-desc">{p.desc}</p>
               <div className="featured-card-footer">
-                <span className="featured-card-price">From ₹{minimumProductPrice(p)}</span>
+                {p.discountPercent > 0 ? (
+                  <span className="featured-card-price" style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                    From <span style={{ color:'#999', fontWeight:500, fontSize:12, textDecoration:'line-through' }}>₹{minimumProductPrice(p)}</span>
+                    ₹{applyDiscount(minimumProductPrice(p), p.discountPercent)}
+                    <span style={{ background:'#8B3A2A', color:'#fff', fontFamily:'Georgia, serif', fontSize:10, fontWeight:700, letterSpacing:'0.04em', padding:'2px 7px', borderRadius:999 }}>{p.discountPercent}% OFF</span>
+                  </span>
+                ) : (
+                  <span className="featured-card-price">From ₹{minimumProductPrice(p)}</span>
+                )}
                 {p.isAvailable === false ? (
                   <span style={{ display:'inline-block', color:'#8B3A2A', border:'1px solid #8B3A2A', borderRadius:999, padding:'8px 14px', fontFamily:'Georgia, serif', fontSize:12, fontWeight:700, letterSpacing:'0.06em' }}>OUT OF STOCK</span>
                 ) : (
                   <button
                     type="button"
                     className="btn-order-now"
-                    onClick={() => setSelectedProduct({ name: p.title, category: p.category, image: p.image, options: p.options, dietaryOptions: p.dietaryOptions, messageOnCake: p.messageOnCake, isAvailable: p.isAvailable })}
+                    onClick={() => setSelectedProduct({ name: p.title, category: p.category, image: p.image, options: p.options, dietaryOptions: p.dietaryOptions, messageOnCake: p.messageOnCake, isAvailable: p.isAvailable, discountPercent: p.discountPercent })}
                   >
                     SELECT OPTIONS
                   </button>
