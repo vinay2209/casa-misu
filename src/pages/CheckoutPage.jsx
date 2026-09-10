@@ -27,7 +27,7 @@ function loadRazorpayScript() {
 
 function ScheduleSection({ schedule, setSchedule }) {
   const minDate = todayPlusDaysISO(1)
-  const maxDate = todayPlusDaysISO(30)
+  const maxDate = todayPlusDaysISO(7)
 
   return (
     <div style={styles.scheduleBox}>
