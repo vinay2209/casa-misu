@@ -25,9 +25,25 @@ function loadRazorpayScript() {
   })
 }
 
-function ScheduleSection({ schedule, setSchedule }) {
-  const minDate = todayPlusDaysISO(1)
-  const maxDate = todayPlusDaysISO(7)
+function availableDates(blockedDates) {
+  const dates = []
+  for (let i = 1; i <= 7; i++) {
+    const iso = todayPlusDaysISO(i)
+    if (!blockedDates.includes(iso)) dates.push(iso)
+  }
+  return dates
+}
+
+function formatDayLabel(iso) {
+  const d = new Date(`${iso}T00:00:00`)
+  return {
+    weekday: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+    day: d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+  }
+}
+
+function ScheduleSection({ schedule, setSchedule, blockedDates }) {
+  const dates = availableDates(blockedDates)
 
   return (
     <div style={styles.scheduleBox}>
@@ -54,17 +70,30 @@ function ScheduleSection({ schedule, setSchedule }) {
 
       {schedule.orderType === 'scheduled' && (
         <div style={styles.scheduleFields}>
-          <label style={styles.label}>
+          <div style={styles.label}>
             Date
-            <input
-              type="date"
-              min={minDate}
-              max={maxDate}
-              value={schedule.deliveryDate}
-              onChange={(e) => setSchedule({ ...schedule, deliveryDate: e.target.value })}
-              style={styles.input}
-            />
-          </label>
+            {dates.length === 0 ? (
+              <p style={styles.pincodeIneligible}>No dates are available for scheduling right now — please choose "As Soon As Possible" or contact us directly.</p>
+            ) : (
+              <div style={styles.dateRow}>
+                {dates.map((iso) => {
+                  const { weekday, day } = formatDayLabel(iso)
+                  const active = schedule.deliveryDate === iso
+                  return (
+                    <button
+                      key={iso}
+                      type="button"
+                      style={{ ...styles.dateBtn, ...(active ? styles.dateBtnActive : {}) }}
+                      onClick={() => setSchedule({ ...schedule, deliveryDate: iso })}
+                    >
+                      <span style={styles.dateBtnWeekday}>{weekday}</span>
+                      <span style={styles.dateBtnDay}>{day}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           <label style={styles.label}>
             Preferred Time
             <select
@@ -96,7 +125,7 @@ export default function CheckoutPage() {
   const [schedule, setSchedule] = useState({ orderType: 'asap', deliveryDate: '', deliveryTimeSlot: '' })
   const [checkoutError, setCheckoutError] = useState('')
   const [form, setForm] = useState({ customerName: '', customerPhone: '', customerEmail: '', address: '', specialRequests: '' })
-  const [settings, setSettings] = useState({ pickupAddresses: [], acceptingOrders: true, pausedMessage: '' })
+  const [settings, setSettings] = useState({ pickupAddresses: [], acceptingOrders: true, pausedMessage: '', blockedDates: [] })
   const [pickupAddress, setPickupAddress] = useState('')
 
   useEffect(() => {
@@ -115,7 +144,7 @@ export default function CheckoutPage() {
         const addresses = Array.isArray(data.pickupAddresses) && data.pickupAddresses.length > 0
           ? data.pickupAddresses
           : [STORE_ADDRESS]
-        setSettings({ pickupAddresses: addresses, acceptingOrders: data.acceptingOrders !== false, pausedMessage: data.pausedMessage || '' })
+        setSettings({ pickupAddresses: addresses, acceptingOrders: data.acceptingOrders !== false, pausedMessage: data.pausedMessage || '', blockedDates: Array.isArray(data.blockedDates) ? data.blockedDates : [] })
         setPickupAddress(addresses[0])
       })
       .catch((err) => {
@@ -412,7 +441,7 @@ export default function CheckoutPage() {
             )}
 
             <h4 style={styles.sectionTitle}>{shippingMethod === 'delivery' ? 'Delivery' : 'Pickup'} Date &amp; Time</h4>
-            <ScheduleSection schedule={schedule} setSchedule={setSchedule} />
+            <ScheduleSection schedule={schedule} setSchedule={setSchedule} blockedDates={settings.blockedDates} />
 
             <label style={styles.label}>
               Special Requests (optional)
@@ -620,6 +649,39 @@ const styles = {
     fontFamily: 'Georgia, serif',
     cursor: 'pointer',
     fontSize: 13,
+  },
+  dateRow: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  dateBtn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
+    padding: '8px 12px',
+    borderRadius: 10,
+    border: `1.5px solid ${NAVY}`,
+    background: '#fff',
+    color: NAVY,
+    fontFamily: 'Georgia, serif',
+    cursor: 'pointer',
+    minWidth: 58,
+  },
+  dateBtnActive: {
+    background: NAVY,
+    color: '#fff',
+  },
+  dateBtnWeekday: {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    opacity: 0.8,
+  },
+  dateBtnDay: {
+    fontSize: 13,
+    fontWeight: 700,
   },
   toggleActive: {
     background: NAVY,

@@ -49,6 +49,11 @@ router.put('/', protect, async (req, res) => {
         settings.saleDiscountPercent = Math.min(100, Math.max(0, pct));
       }
     }
+    if (Array.isArray(req.body.blockedDates)) {
+      settings.blockedDates = [...new Set(
+        req.body.blockedDates.filter((d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d))
+      )].sort();
+    }
     await settings.save();
     res.json(settings);
   } catch (err) {

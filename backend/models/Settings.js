@@ -14,6 +14,10 @@ const SettingsSchema = new mongoose.Schema({
   // onSale flag, using this same percentage, independent of this switch.
   saleActive: { type: Boolean, default: false },
   saleDiscountPercent: { type: Number, default: 0 },
+  // Specific dates (YYYY-MM-DD) the admin has marked as unavailable for
+  // scheduled orders — e.g. a day she already knows she can't fulfill.
+  // Excluded from the date picker at checkout.
+  blockedDates: { type: [String], default: [] },
 });
 
 module.exports = mongoose.model('Settings', SettingsSchema);

@@ -43,7 +43,8 @@ export default function AdminDashboard(){
   const [menuForm, setMenuForm] = useState(EMPTY_MENU_FORM)
   const [editingMenuItem, setEditingMenuItem] = useState(null)
   const [loginForm, setLoginForm] = useState({ username:'', password:'' })
-  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true, pausedMessage: '', saleActive: false, saleDiscountPercent: '' })
+  const [settings, setSettings] = useState({ pickupAddresses: [''], acceptingOrders: true, pausedMessage: '', saleActive: false, saleDiscountPercent: '', blockedDates: [] })
+  const [newBlockedDate, setNewBlockedDate] = useState('')
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
 
@@ -117,6 +118,7 @@ export default function AdminDashboard(){
         pausedMessage: data.pausedMessage || '',
         saleActive: Boolean(data.saleActive),
         saleDiscountPercent: data.saleDiscountPercent || '',
+        blockedDates: Array.isArray(data.blockedDates) ? data.blockedDates : [],
       })
     }catch(err){ console.error(err) }
   }
@@ -130,6 +132,7 @@ export default function AdminDashboard(){
         pausedMessage: settings.pausedMessage,
         saleActive: settings.saleActive,
         saleDiscountPercent: Number(settings.saleDiscountPercent) || 0,
+        blockedDates: settings.blockedDates,
       }
       await fetch('https://casa-misu.onrender.com/api/settings', {
         method: 'PUT',
@@ -871,6 +874,51 @@ export default function AdminDashboard(){
                   </div>
                 ))}
                 <button type="button" onClick={() => setSettings({ ...settings, pickupAddresses: [...settings.pickupAddresses, ''] })} style={{ padding:'6px 10px' }}>+ Add another pickup location</button>
+              </div>
+
+              <div style={{ background:'#FAF6EE', border:'1px solid #1B2E70', borderRadius:8, padding:16, marginBottom:20, maxWidth:520 }}>
+                <div style={{ fontWeight:700, color:'#1B2E70', marginBottom:6 }}>Blocked dates</div>
+                <p style={{ fontSize:13, color:'#666', margin:'0 0 12px' }}>
+                  Customers can only schedule a delivery or pickup within the next 7 days. If you already know you can't fulfill a specific date in that window — fully booked, a holiday, a day off — block it here and it won't be selectable at checkout.
+                </p>
+                {settings.blockedDates.length > 0 && (
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:12 }}>
+                    {settings.blockedDates.map((d) => (
+                      <span key={d} style={{ display:'flex', alignItems:'center', gap:6, background:'#fff', border:'1px solid #8B3A2A', color:'#8B3A2A', borderRadius:999, padding:'4px 6px 4px 12px', fontSize:12, fontWeight:600 }}>
+                        {new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })}
+                        <button
+                          type="button"
+                          onClick={() => setSettings({ ...settings, blockedDates: settings.blockedDates.filter((x) => x !== d) })}
+                          style={{ background:'#8B3A2A', color:'#fff', border:'none', borderRadius:'50%', width:18, height:18, lineHeight:1, cursor:'pointer', fontSize:12 }}
+                          aria-label={`Unblock ${d}`}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display:'flex', gap:8 }}>
+                  <input
+                    type="date"
+                    value={newBlockedDate}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={e => setNewBlockedDate(e.target.value)}
+                    style={{ padding:8 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newBlockedDate && !settings.blockedDates.includes(newBlockedDate)) {
+                        setSettings({ ...settings, blockedDates: [...settings.blockedDates, newBlockedDate].sort() })
+                      }
+                      setNewBlockedDate('')
+                    }}
+                    style={{ padding:'6px 10px' }}
+                  >
+                    + Block this date
+                  </button>
+                </div>
               </div>
 
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>

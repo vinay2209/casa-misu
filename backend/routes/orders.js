@@ -26,6 +26,11 @@ router.post('/', async (req, res) => {
     }
 
     const { customerName, customerPhone, customerEmail, items, quantity, specialRequests, totalAmount, deliveryType, address, deliveryDate, deliveryTimeSlot, orderType, transactionId, paymentMethod, deliveryFee, deliveryPincode, razorpayOrderId, razorpayPaymentId, paymentStatus } = req.body;
+
+    if (orderType === 'scheduled' && deliveryDate && settings?.blockedDates?.includes(deliveryDate)) {
+      return res.status(400).json({ success: false, message: 'That date is no longer available. Please choose a different date.' });
+    }
+
     const order = new Order({
       customerName,
       customerPhone,
